@@ -6,7 +6,7 @@ type Orientation int
 const (
 	OtherOrientation Orientation = iota
 	PageUp
-	PageDown
 	PageRight
+	PageDown
 	PageLeft
 )
