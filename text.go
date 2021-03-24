@@ -84,13 +84,13 @@ type TextWord struct {
 	Orientation Orientation
 }
 
-func MakeWord(letters Chars) *TextWord {
+func MakeWord(letters Chars) TextWord {
 	var quads Quads = make(Quads, len(letters))
 	for i, l := range letters {
 		quads[i] = l.Quad
 	}
 
-	return &TextWord{
+	return TextWord{
 		Chars:       letters,
 		Orientation: quads.Orientation(),
 		Quad:        quads.Union(),
@@ -165,13 +165,13 @@ type TextLine struct {
 	WordSeparator string
 }
 
-func MakeTextLine(words TextWords, sep string) *TextLine {
+func MakeTextLine(words TextWords, sep string) TextLine {
 	var quads Quads = make(Quads, len(words))
 	for i, l := range words {
 		quads[i] = l.Quad
 	}
 
-	return &TextLine{
+	return TextLine{
 		TextWords:     words,
 		Orientation:   quads.Orientation(),
 		Quad:          quads.Union(),
@@ -199,13 +199,13 @@ type TextBlock struct {
 	LineSeparator string
 }
 
-func MakeTextBlock(lines TextLines, sep string) *TextBlock {
+func MakeTextBlock(lines TextLines, sep string) TextBlock {
 	var quads Quads = make(Quads, len(lines))
 	for i, l := range lines {
 		quads[i] = l.Quad
 	}
 
-	return &TextBlock{
+	return TextBlock{
 		TextLines:     lines,
 		Orientation:   quads.Orientation(),
 		Quad:          quads.Union(),
