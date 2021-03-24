@@ -1,6 +1,7 @@
 package gfx
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -9,8 +10,59 @@ import (
 
 type Chars []Char
 
-func (l Chars) IsWhitespace() bool {
-	for _, letter := range l {
+func (ch Chars) Orientation() (orientation Orientation) {
+	if len(ch) == 0 {
+		return OtherOrientation
+	}
+
+	orientation = ch[0].Orientation
+	if orientation == OtherOrientation {
+		return
+	}
+
+	for _, word := range ch[1:] {
+		if word.Orientation != orientation {
+			return OtherOrientation
+		}
+	}
+	return
+}
+
+func (ch Chars) OrderByReadingOrder() (ret Chars) {
+	if len(ch) <= 1 {
+		return ch
+	}
+
+	switch ch.Orientation() {
+	case PageUp:
+		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ToSlice(&ret)
+	case PageDown:
+		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ToSlice(&ret)
+	case PageLeft:
+		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+	case PageRight:
+		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+	default:
+		avgAngle := linq.From(ch).Select(func(i interface{}) interface{} { return i.(Char).Quad.Rotation() }).Average()
+		switch {
+		case 0 < avgAngle && avgAngle <= 90:
+			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		case 90 < avgAngle && avgAngle <= 180:
+			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		case -180 < avgAngle && avgAngle <= -90:
+			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		case -90 < avgAngle && avgAngle <= 0:
+			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		default:
+			return ch
+		}
+	}
+
+	return
+}
+
+func (ch Chars) IsWhitespace() bool {
+	for _, letter := range ch {
 		if !letter.IsWhitespace() {
 			return false
 		}
@@ -18,12 +70,20 @@ func (l Chars) IsWhitespace() bool {
 	return true
 }
 
-func (l Chars) GetMeanConfidence() float64 {
+func (ch Chars) GetMeanConfidence() float64 {
 	sum := 0.0
-	for _, c := range l {
+	for _, c := range ch {
 		sum += c.Confidence
 	}
-	return sum / float64(len(l))
+	return sum / float64(len(ch))
+}
+
+func (ch Chars) GetMeanDeskewAngle() float64 {
+	sum := 0.0
+	for _, c := range ch {
+		sum += c.DeskewAngle
+	}
+	return sum / float64(len(ch))
 }
 
 type Char struct {
@@ -65,24 +125,24 @@ func (w TextWords) OrderByReadingOrder() (ret TextWords) {
 
 	switch w.Orientation() {
 	case PageUp:
-		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
 	case PageDown:
-		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
 	case PageLeft:
-		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 	case PageRight:
-		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 	default:
-		avgAngle := linq.From(w).Select(func(i interface{}) interface{} { return i.(*TextWord).Quad.Rotation() }).Average()
+		avgAngle := linq.From(w).Select(func(i interface{}) interface{} { return i.(TextWord).Quad.Rotation() }).Average()
 		switch {
 		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 		default:
 			return w
 		}
@@ -99,6 +159,45 @@ type TextWord struct {
 	DeskewAngle   float64
 	StartBaseline Point
 	EndBaseline   Point
+}
+
+func MakeWord(letters Chars) (word TextWord) {
+	if len(letters) == 0 {
+		return
+	}
+
+	if len(letters) == 1 {
+		word.Confidence = letters[0].Confidence
+		word.DeskewAngle = letters[0].DeskewAngle
+		word.Quad = letters[0].Quad
+		word.EndBaseline = letters[0].EndBaseline
+		word.StartBaseline = letters[0].StartBaseline
+		word.EndBaseline = letters[0].EndBaseline
+		word.Orientation = letters[0].Orientation
+		word.Value = fmt.Sprintf("%c", letters[0].Rune)
+		return
+	}
+
+	letters = letters.OrderByReadingOrder()
+
+	quads := make(Quads, len(letters))
+	for i, letter := range letters {
+		quads[i] = letter.Quad
+	}
+
+	var builder strings.Builder
+	for _, letter := range letters {
+		builder.WriteRune(letter.Rune)
+	}
+	word.Value = builder.String()
+	word.Confidence = letters.GetMeanConfidence()
+	word.DeskewAngle = letters.GetMeanDeskewAngle()
+	word.Orientation = letters.Orientation()
+	word.StartBaseline = letters[0].StartBaseline
+	word.EndBaseline = letters[len(letters)-1].EndBaseline
+	word.Quad = quads.Union()
+
+	return
 }
 
 func (w TextWord) IsWhitespace() bool {
@@ -136,24 +235,24 @@ func (l TextLines) OrderByReadingOrder() (ret TextLines) {
 
 	switch l.Orientation() {
 	case PageUp:
-		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
 	case PageDown:
-		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
 	case PageLeft:
-		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
 	case PageRight:
-		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
 	default:
-		avgAngle := linq.From(l).Select(func(i interface{}) interface{} { return i.(*TextLine).Quad.Rotation() }).Average()
+		avgAngle := linq.From(l).Select(func(i interface{}) interface{} { return i.(TextLine).Quad.Rotation() }).Average()
 		switch {
 		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
 		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ThenByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
 		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
 		default:
 			return l
 		}
