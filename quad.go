@@ -63,15 +63,15 @@ func (q Quad) Height() float64 { return q.Top() - q.Bottom() }
 func (q Quad) Orientation() Orientation {
 	if EqualEpsilon(q.BottomLeft.Y, q.BottomRight.Y) {
 		if q.BottomLeft.X > q.BottomRight.X {
-			return Rotate180
+			return PageDown
 		}
-		return Horizontal
+		return PageUp
 	}
 	if EqualEpsilon(q.BottomLeft.X, q.BottomRight.X) {
 		if q.BottomLeft.Y > q.BottomRight.Y {
-			return Rotate270
+			return PageRight
 		}
-		return Rotate90
+		return PageLeft
 	}
 	return OtherOrientation
 }
@@ -116,7 +116,7 @@ func (q Quads) Orientation() (orientation Orientation) {
 func (q Quads) Union() (u Quad) {
 	var left, bottom, right, top float64
 	switch q.Orientation() {
-	case Horizontal:
+	case PageUp:
 		left, bottom, right, top = math.Inf(1), math.Inf(1), math.Inf(-1), math.Inf(-1)
 		for _, quad := range q {
 			left = math.Min(left, quad.Left())
@@ -124,7 +124,7 @@ func (q Quads) Union() (u Quad) {
 			right = math.Max(right, quad.Right())
 			top = math.Max(top, quad.Top())
 		}
-	case Rotate180:
+	case PageDown:
 		left, bottom, right, top = math.Inf(-1), math.Inf(-1), math.Inf(1), math.Inf(1)
 		for _, quad := range q {
 			right = math.Min(right, quad.Left())
@@ -132,7 +132,7 @@ func (q Quads) Union() (u Quad) {
 			left = math.Max(left, quad.Right())
 			bottom = math.Max(bottom, quad.Top())
 		}
-	case Rotate90:
+	case PageLeft:
 		left, bottom, right, top = math.Inf(1), math.Inf(-1), math.Inf(-1), math.Inf(1)
 		for _, quad := range q {
 			top = math.Min(top, quad.Left())
@@ -140,7 +140,7 @@ func (q Quads) Union() (u Quad) {
 			bottom = math.Max(bottom, quad.Right())
 			right = math.Max(right, quad.Top())
 		}
-	case Rotate270:
+	case PageRight:
 		left, bottom, right, top = math.Inf(-1), math.Inf(1), math.Inf(1), math.Inf(-1)
 		for _, quad := range q {
 			bottom = math.Min(bottom, quad.Left())

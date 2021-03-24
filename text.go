@@ -51,13 +51,13 @@ func (w TextWords) OrderByReadingOrder() (ret TextWords) {
 	}
 
 	switch w.Orientation() {
-	case Horizontal:
+	case PageUp:
 		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
-	case Rotate180:
+	case PageDown:
 		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
-	case Rotate90:
+	case PageLeft:
 		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case Rotate270:
+	case PageRight:
 		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(*TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
 	default:
 		avgAngle := linq.From(w).Select(func(i interface{}) interface{} { return i.(*TextWord).Quad.Rotation() }).Average()
@@ -131,13 +131,13 @@ func (l TextLines) OrderByReadingOrder() (ret TextLines) {
 	}
 
 	switch l.Orientation() {
-	case Horizontal:
+	case PageUp:
 		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case Rotate180:
+	case PageDown:
 		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case Rotate90:
+	case PageLeft:
 		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
-	case Rotate270:
+	case PageRight:
 		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(*TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
 	default:
 		avgAngle := linq.From(l).Select(func(i interface{}) interface{} { return i.(*TextLine).Quad.Rotation() }).Average()
