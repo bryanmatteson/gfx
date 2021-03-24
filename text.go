@@ -101,6 +101,10 @@ type TextWord struct {
 	EndBaseline   Point
 }
 
+func (w TextWord) IsWhitespace() bool {
+	return strings.TrimSpace(w.Value) == ""
+}
+
 func (w TextWord) String() string {
 	return w.Value
 }
