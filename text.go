@@ -7,9 +7,9 @@ import (
 	"github.com/ahmetb/go-linq"
 )
 
-type Letters []Letter
+type Chars []Char
 
-func (l Letters) IsWhitespace() bool {
+func (l Chars) IsWhitespace() bool {
 	for _, letter := range l {
 		if !letter.IsWhitespace() {
 			return false
@@ -18,12 +18,12 @@ func (l Letters) IsWhitespace() bool {
 	return true
 }
 
-type Letter struct {
+type Char struct {
 	Rune rune
 	Quad Quad
 }
 
-func (l Letter) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
+func (l Char) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
 
 type TextWords []TextWord
 
@@ -79,19 +79,19 @@ func (w TextWords) OrderByReadingOrder() (ret TextWords) {
 }
 
 type TextWord struct {
-	Letters
+	Chars
 	Quad        Quad
 	Orientation Orientation
 }
 
-func MakeWord(letters Letters) *TextWord {
+func MakeWord(letters Chars) *TextWord {
 	var quads Quads = make(Quads, len(letters))
 	for i, l := range letters {
 		quads[i] = l.Quad
 	}
 
 	return &TextWord{
-		Letters:     letters,
+		Chars:       letters,
 		Orientation: quads.Orientation(),
 		Quad:        quads.Union(),
 	}
@@ -99,7 +99,7 @@ func MakeWord(letters Letters) *TextWord {
 
 func (w TextWord) String() string {
 	var builder strings.Builder
-	for _, letter := range w.Letters {
+	for _, letter := range w.Chars {
 		builder.WriteRune(letter.Rune)
 	}
 	return builder.String()
