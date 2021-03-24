@@ -167,6 +167,14 @@ func (m Matrix) TransformRect(r Rect) Rect {
 	return MakeRectCorners(minX, minY, maxX, maxY)
 }
 
+func (m Matrix) TransformQuad(q Quad) (result Quad) {
+	result.BottomLeft = m.TransformPoint(q.BottomLeft)
+	result.BottomRight = m.TransformPoint(q.BottomRight)
+	result.TopLeft = m.TransformPoint(q.TopLeft)
+	result.TopRight = m.TransformPoint(q.TopRight)
+	return
+}
+
 // Transform applies the transformation matrix to points. It modify the points passed in parameter.
 func (m Matrix) Transform(pts ...Point) (points []Point) {
 	points = make([]Point, len(pts))
