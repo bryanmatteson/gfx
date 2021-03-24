@@ -19,8 +19,13 @@ func (l Chars) IsWhitespace() bool {
 }
 
 type Char struct {
-	Rune rune
-	Quad Quad
+	Rune          rune
+	Quad          Quad
+	Confidence    float64
+	Orientation   Orientation
+	DeskewAngle   float64
+	StartBaseline Point
+	EndBaseline   Point
 }
 
 func (l Char) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
