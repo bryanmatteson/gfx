@@ -18,6 +18,14 @@ func (l Chars) IsWhitespace() bool {
 	return true
 }
 
+func (l Chars) GetMeanConfidence() float64 {
+	sum := 0.0
+	for _, c := range l {
+		sum += c.Confidence
+	}
+	return sum / float64(len(l))
+}
+
 type Char struct {
 	Rune          rune
 	Quad          Quad
@@ -84,30 +92,17 @@ func (w TextWords) OrderByReadingOrder() (ret TextWords) {
 }
 
 type TextWord struct {
-	Chars
-	Quad        Quad
-	Orientation Orientation
-}
-
-func MakeWord(letters Chars) TextWord {
-	var quads Quads = make(Quads, len(letters))
-	for i, l := range letters {
-		quads[i] = l.Quad
-	}
-
-	return TextWord{
-		Chars:       letters,
-		Orientation: quads.Orientation(),
-		Quad:        quads.Union(),
-	}
+	Value         string
+	Quad          Quad
+	Confidence    float64
+	Orientation   Orientation
+	DeskewAngle   float64
+	StartBaseline Point
+	EndBaseline   Point
 }
 
 func (w TextWord) String() string {
-	var builder strings.Builder
-	for _, letter := range w.Chars {
-		builder.WriteRune(letter.Rune)
-	}
-	return builder.String()
+	return w.Value
 }
 
 type TextLines []TextLine
@@ -187,7 +182,7 @@ func MakeTextLine(words TextWords, sep string) TextLine {
 func (l TextLine) String() string {
 	words := make([]string, 0, len(l.TextWords))
 	for _, w := range l.TextWords {
-		if w.IsWhitespace() {
+		if strings.TrimSpace(w.Value) == "" {
 			continue
 		}
 		words = append(words, w.String())
