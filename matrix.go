@@ -8,7 +8,7 @@ type Matrix struct {
 	A, B, C, D, E, F float64
 }
 
-var IdentityMatrix Matrix = Matrix{0, 0, 1, 0, 0, 1}
+var IdentityMatrix Matrix = Matrix{1, 0, 0, 1, 0, 0}
 
 func NewMatrix(a, b, c, d, e, f float64) Matrix {
 	return Matrix{a, b, c, d, e, f}
