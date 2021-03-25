@@ -1,6 +1,9 @@
 package gfx
 
-import "math"
+import (
+	"image"
+	"math"
+)
 
 type Rects []Rect
 
@@ -39,6 +42,10 @@ func MakeRectCorners(x0, y0, x1, y1 float64) Rect {
 
 func EmptyRect() Rect {
 	return Rect{EmptyRange(), EmptyRange()}
+}
+
+func (r Rect) ImageRect() image.Rectangle {
+	return image.Rect(int(r.X.Min), int(r.Y.Min), int(r.X.Max), int(r.Y.Max))
 }
 
 // IsValid reports whether the rectangle is valid.
