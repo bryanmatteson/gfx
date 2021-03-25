@@ -295,6 +295,15 @@ func (l TextLine) String() string {
 
 type TextBlocks []TextBlock
 
+func (tb TextBlocks) String() string {
+	var builder strings.Builder
+	for _, block := range tb {
+		builder.WriteString(block.String())
+		builder.WriteRune('\n')
+	}
+	return builder.String()
+}
+
 type TextBlock struct {
 	TextLines
 	Quad          Quad
