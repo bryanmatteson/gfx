@@ -164,15 +164,7 @@ func (p *Path) ApproxBounds() Rect {
 			maxy = math.Max(maxy, y)
 
 		case CubicCurveToComp:
-			cx0, cy0 := p.Points[j].X, p.Points[j].Y
-			cx1, cy1 := p.Points[j+1].X, p.Points[j+1].Y
 			x, y := p.Points[j+2].X, p.Points[j+2].Y
-
-			x = math.Min(x, cx0)
-			x = math.Min(x, cx1)
-			y = math.Min(y, cy0)
-			y = math.Min(y, cy1)
-
 			minx = math.Min(minx, x)
 			maxx = math.Max(maxx, x)
 			miny = math.Min(miny, y)
