@@ -155,21 +155,19 @@ func (p *Path) ApproxBounds() Rect {
 
 	for i, j := 0, 0; i < len(p.Components); i++ {
 		cmd := p.Components[i]
+
+		var x, y float64
 		switch cmd {
 		case MoveToComp, LineToComp:
-			x, y := p.Points[j].X, p.Points[j].Y
-			minx = math.Min(minx, x)
-			maxx = math.Max(maxx, x)
-			miny = math.Min(miny, y)
-			maxy = math.Max(maxy, y)
-
+			x, y = p.Points[j].X, p.Points[j].Y
 		case CubicCurveToComp:
-			x, y := p.Points[j+2].X, p.Points[j+2].Y
-			minx = math.Min(minx, x)
-			maxx = math.Max(maxx, x)
-			miny = math.Min(miny, y)
-			maxy = math.Max(maxy, y)
+			x, y = p.Points[j+2].X, p.Points[j+2].Y
 		}
+
+		minx = math.Min(minx, x)
+		maxx = math.Max(maxx, x)
+		miny = math.Min(miny, y)
+		maxy = math.Max(maxy, y)
 
 		j += cmd.PointCount()
 	}

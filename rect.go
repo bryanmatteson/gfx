@@ -130,6 +130,29 @@ func (r Rect) Intersection(other Rect) Rect {
 	return Rect{xx, yy}
 }
 
+func (r Rect) ContainsAllPointsInPath(p *Path) bool {
+	for i, j := 0, 0; i < len(p.Components); i++ {
+		cmd := p.Components[i]
+
+		var pt Point
+		switch cmd {
+		case MoveToComp, LineToComp:
+			pt = p.Points[j]
+		case QuadCurveToComp:
+			pt = p.Points[j+1]
+		case CubicCurveToComp:
+			pt = p.Points[j+2]
+		}
+
+		if !r.ContainsPoint(pt) {
+			return false
+		}
+
+		j += cmd.PointCount()
+	}
+	return true
+}
+
 func (r Rect) Width() float64  { return r.X.Length() }
 func (r Rect) Height() float64 { return r.Y.Length() }
 func (r Rect) IsEmpty() bool   { return r.X.IsEmpty() || r.Y.IsEmpty() }
