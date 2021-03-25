@@ -1,5 +1,24 @@
 package gfx
 
+import "math"
+
+type Rects []Rect
+
+func (r Rects) Union() (u Rect) {
+	var minx, miny, maxx, maxy float64
+	minx, miny = math.Inf(1), math.Inf(1)
+	maxx, maxy = math.Inf(-1), math.Inf(-1)
+
+	for _, rect := range r {
+		minx = math.Min(minx, rect.X.Min)
+		miny = math.Min(miny, rect.Y.Min)
+		maxx = math.Max(maxx, rect.X.Max)
+		maxy = math.Max(maxy, rect.Y.Max)
+	}
+
+	return MakeRectCorners(minx, miny, maxx, maxy)
+}
+
 type Rect struct {
 	X, Y Range
 }
