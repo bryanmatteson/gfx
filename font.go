@@ -33,13 +33,13 @@ type FontData struct {
 	Family FontFamily
 }
 
-func (f FontData) IsBold() bool { return f.Style&FontStyleBold == FontStyleBold }
-
+func (f FontData) IsBold() bool   { return f.Style&FontStyleBold == FontStyleBold }
 func (f FontData) IsItalic() bool { return f.Style&FontStyleItalic == FontStyleItalic }
 
 type FontCache interface {
 	Load(FontData) (*truetype.Font, error)
 	Store(FontData, *truetype.Font)
+	Has(FontData) bool
 }
 
 type defaultFontCache struct {
@@ -94,6 +94,14 @@ func (cache *defaultFontCache) Store(fontData FontData, font *truetype.Font) {
 	cache.Lock()
 	cache.fonts[fontKeyName(fontData)] = font
 	cache.Unlock()
+}
+
+// Store a font to this cache
+func (cache *defaultFontCache) Has(fontData FontData) bool {
+	cache.Lock()
+	_, ok := cache.fonts[fontKeyName(fontData)]
+	cache.Unlock()
+	return ok
 }
 
 func GetGlobalFontCache() FontCache {
