@@ -7,6 +7,45 @@ import (
 
 type Rects []Rect
 
+// CoalescedBounds ...
+func (r Rects) Coalesce() Rects {
+	groups := make([]map[int]struct{}, 0)
+
+	for idx, rect := range r {
+		var group map[int]struct{}
+		for _, grp := range groups {
+			if _, hasIdx := grp[idx]; hasIdx {
+				group = grp
+				break
+			}
+		}
+
+		if group == nil {
+			grp := make(map[int]struct{})
+			grp[idx] = struct{}{}
+			groups = append(groups, grp)
+			group = grp
+		}
+
+		for i := idx + 1; i < len(r); i++ {
+			next := r[i]
+			if rect.Intersects(next) {
+				group[i] = struct{}{}
+			}
+		}
+	}
+
+	coalesced := make(Rects, len(groups))
+	for i, grp := range groups {
+		rect := Rect{}
+		for idx := range grp {
+			rect = rect.Union(r[idx])
+		}
+		coalesced[i] = rect
+	}
+	return coalesced
+}
+
 func (r Rects) Union() (u Rect) {
 	var minx, miny, maxx, maxy float64
 	minx, miny = math.Inf(1), math.Inf(1)
