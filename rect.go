@@ -30,18 +30,15 @@ func (r Rects) GroupRows() []Rects {
 		ys = append(ys, y)
 	}
 
-	sort.Float64s(ys)
 	rows := make([]Rects, 0)
+	row := make(Rects, 0)
 
-	var row Rects
+	sort.Float64s(ys)
 
-	var count = 0
+	count := 0
 	for _, y := range ys {
 		for _, rect := range r {
 			switch {
-			case EqualEpsilon(rect.Y.Min, rect.Y.Max):
-				continue
-
 			case EqualEpsilon(rect.Y.Min, y):
 				count++
 			case EqualEpsilon(rect.Y.Max, y):
@@ -51,11 +48,11 @@ func (r Rects) GroupRows() []Rects {
 			}
 
 			row = append(row, rect)
+		}
 
-			if count == 0 {
-				rows = append(rows, row)
-				row = nil
-			}
+		if count == 0 {
+			rows = append(rows, row)
+			row = nil
 		}
 	}
 
