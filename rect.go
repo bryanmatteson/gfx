@@ -37,12 +37,20 @@ func (r Rects) Coalesce() Rects {
 
 	coalesced := make(Rects, len(groups))
 	for i, grp := range groups {
-		grouped := make(Rects, 0, len(grp))
+		var minx, miny, maxx, maxy float64
+		minx, miny = math.Inf(1), math.Inf(1)
+		maxx, maxy = math.Inf(-1), math.Inf(-1)
+
 		for idx := range grp {
-			grouped = append(grouped, r[idx])
+			minx = math.Min(minx, r[idx].X.Min)
+			miny = math.Min(miny, r[idx].Y.Min)
+			maxx = math.Max(maxx, r[idx].X.Max)
+			maxy = math.Max(maxy, r[idx].Y.Max)
 		}
-		coalesced[i] = grouped.Union()
+
+		coalesced[i] = MakeRectCorners(minx, miny, maxx, maxy)
 	}
+
 	return coalesced
 }
 
