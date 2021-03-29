@@ -13,27 +13,19 @@ func (r Rects) GroupRows() []Rects {
 		return []Rects{}
 	}
 
-	starts, ends := make(map[float64]struct{}, len(r)), make(map[float64]struct{}, len(r))
+	events := make(map[float64]struct{})
 	for _, rect := range r {
-		if EqualEpsilon(rect.Y.Min, rect.Y.Max) {
-			continue
-		}
-		starts[rect.Y.Min], ends[rect.Y.Max] = struct{}{}, struct{}{}
+		events[rect.Y.Min], events[rect.Y.Max] = struct{}{}, struct{}{}
 	}
 
-	ys := make([]float64, 0, len(starts)+len(ends))
-	for y := range starts {
+	ys := make([]float64, 0, len(events))
+	for y := range events {
 		ys = append(ys, y)
 	}
-
-	for y := range ends {
-		ys = append(ys, y)
-	}
+	sort.Float64s(ys)
 
 	rows := make([]Rects, 0)
 	row := make(Rects, 0)
-
-	sort.Float64s(ys)
 
 	count := 0
 	for _, y := range ys {
@@ -48,6 +40,7 @@ func (r Rects) GroupRows() []Rects {
 			if EqualEpsilon(rect.Y.Max, y) {
 				count--
 			}
+
 			row = append(row, rect)
 		}
 
