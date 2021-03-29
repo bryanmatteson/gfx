@@ -38,7 +38,7 @@ func (f FontData) IsItalic() bool { return f.Style&FontStyleItalic == FontStyleI
 
 type FontCache interface {
 	Load(FontData) (*truetype.Font, error)
-	Store(FontData, *truetype.Font)
+	Store(FontData, []byte) error
 	Has(FontData) bool
 }
 
@@ -90,18 +90,24 @@ func (cache *defaultFontCache) Load(fontData FontData) (*truetype.Font, error) {
 }
 
 // Store a font to this cache
-func (cache *defaultFontCache) Store(fontData FontData, font *truetype.Font) {
+func (cache *defaultFontCache) Store(fontData FontData, data []byte) error {
+	font, err := truetype.Parse(data)
+	if err != nil {
+		return err
+	}
+
 	cache.Lock()
 	cache.fonts[fontKeyName(fontData)] = font
 	cache.Unlock()
+	return nil
 }
 
 // Store a font to this cache
 func (cache *defaultFontCache) Has(fontData FontData) bool {
 	cache.Lock()
-	_, ok := cache.fonts[fontKeyName(fontData)]
+	font, ok := cache.fonts[fontKeyName(fontData)]
 	cache.Unlock()
-	return ok
+	return ok && font != nil
 }
 
 func GetGlobalFontCache() FontCache {
