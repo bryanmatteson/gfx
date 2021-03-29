@@ -37,11 +37,11 @@ func (r Rects) Coalesce() Rects {
 
 	coalesced := make(Rects, len(groups))
 	for i, grp := range groups {
-		rect := Rect{}
+		grouped := make(Rects, 0, len(grp))
 		for idx := range grp {
-			rect = rect.Union(r[idx])
+			grouped = append(grouped, r[idx])
 		}
-		coalesced[i] = rect
+		coalesced[i] = grouped.Union()
 	}
 	return coalesced
 }
