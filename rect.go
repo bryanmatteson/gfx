@@ -38,6 +38,10 @@ func (r Rects) GroupRows() []Rects {
 	count := 0
 	for _, y := range ys {
 		for _, rect := range r {
+			if !(EqualEpsilon(rect.Y.Min, y) || EqualEpsilon(rect.Y.Max, y)) {
+				continue
+			}
+
 			if EqualEpsilon(rect.Y.Min, y) {
 				count++
 			}
