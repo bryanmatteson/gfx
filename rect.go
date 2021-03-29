@@ -9,6 +9,10 @@ import (
 type Rects []Rect
 
 func (r Rects) GroupRows() []Rects {
+	if len(r) == 0 {
+		return []Rects{}
+	}
+
 	starts, ends := make(map[float64]struct{}, len(r)), make(map[float64]struct{}, len(r))
 	for _, rect := range r {
 		starts[rect.Y.Min], ends[rect.Y.Max] = struct{}{}, struct{}{}
@@ -55,6 +59,10 @@ func (r Rects) GroupRows() []Rects {
 }
 
 func (r Rects) Coalesce() Rects {
+	if len(r) == 0 {
+		return Rects{}
+	}
+
 	groups := make([]map[int]struct{}, 0)
 
 	for idx, rect := range r {
