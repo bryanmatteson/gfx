@@ -15,6 +15,9 @@ func (r Rects) GroupRows() []Rects {
 
 	starts, ends := make(map[float64]struct{}, len(r)), make(map[float64]struct{}, len(r))
 	for _, rect := range r {
+		if EqualEpsilon(rect.Y.Min, rect.Y.Max) {
+			continue
+		}
 		starts[rect.Y.Min], ends[rect.Y.Max] = struct{}{}, struct{}{}
 	}
 
@@ -35,15 +38,16 @@ func (r Rects) GroupRows() []Rects {
 	var count = 0
 	for _, y := range ys {
 		for _, rect := range r {
-			if !EqualEpsilon(rect.Y.Min, y) && !EqualEpsilon(rect.Y.Max, y) {
+			switch {
+			case EqualEpsilon(rect.Y.Min, rect.Y.Max):
 				continue
-			}
 
-			if EqualEpsilon(rect.Y.Min, y) {
+			case EqualEpsilon(rect.Y.Min, y):
 				count++
-			}
-			if EqualEpsilon(rect.Y.Max, y) {
+			case EqualEpsilon(rect.Y.Max, y):
 				count--
+			default:
+				continue
 			}
 
 			row = append(row, rect)
