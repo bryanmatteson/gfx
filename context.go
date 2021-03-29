@@ -78,6 +78,46 @@ func (gc *ImageContext) ClearRect(rect image.Rectangle) {
 	draw.Draw(gc.img, rect, imageColor, image.Point{}, draw.Src)
 }
 
+func (gc *ImageContext) DrawRect(rect Rect) {
+	gc.MoveTo(rect.X.Min, rect.Y.Min)
+	gc.LineTo(rect.X.Max, rect.Y.Min)
+	gc.LineTo(rect.X.Max, rect.Y.Max)
+	gc.LineTo(rect.X.Min, rect.Y.Max)
+	gc.ClosePath()
+}
+
+func (gc *ImageContext) DrawQuad(quad Quad) {
+	gc.MoveToPoint(quad.BottomLeft)
+	gc.LineToPoint(quad.TopLeft)
+	gc.LineToPoint(quad.TopRight)
+	gc.LineToPoint(quad.BottomRight)
+	gc.ClosePath()
+}
+
+func (gc *ImageContext) DrawLine(line Line) {
+	gc.MoveToPoint(line.Pt1)
+	gc.LineToPoint(line.Pt2)
+}
+
+func (gc *ImageContext) DrawPath(path *Path) {
+	var j = 0
+	for _, cmd := range path.Components {
+		switch cmd {
+		case MoveToComp:
+			gc.MoveToPoint(path.Points[j])
+		case LineToComp:
+			gc.LineToPoint(path.Points[j])
+		case QuadCurveToComp:
+			gc.QuadCurveToPoints(path.Points[j], path.Points[j+1])
+		case CubicCurveToComp:
+			gc.CubicCurveToPoints(path.Points[j], path.Points[j+1], path.Points[j+2])
+		case ClosePathComp:
+			gc.ClosePath()
+		}
+		j += cmd.PointCount()
+	}
+}
+
 func (gc *ImageContext) DrawImage(img image.Image) {
 	DrawImage(img, gc.img, gc.Current.Trm, draw.Over, gc.Filter)
 }
@@ -279,12 +319,11 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 	stroker := NewLineStroker(gc.Current.Cap, gc.Current.Join, Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.strokeRasterizer}})
 	stroker.HalfLineWidth = gc.Current.LineWidth / 2
 
-	var liner Flattener
-	if gc.Current.Dash != nil && len(gc.Current.Dash) > 0 {
+	var liner Flattener = stroker
+	if len(gc.Current.Dash) > 0 {
 		liner = NewDashConverter(gc.Current.Dash, gc.Current.DashOffset, stroker)
-	} else {
-		liner = stroker
 	}
+
 	for _, p := range paths {
 		Flatten(p, liner, gc.Current.Trm.GetScale())
 	}
@@ -292,7 +331,6 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 	gc.paint(gc.strokeRasterizer, gc.Current.StrokeColor)
 }
 
-// Fill fills the paths with the color specified by SetFillColor
 func (gc *ImageContext) Fill(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
 	gc.fillRasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
@@ -305,7 +343,6 @@ func (gc *ImageContext) Fill(paths ...*Path) {
 	gc.paint(gc.fillRasterizer, gc.Current.FillColor)
 }
 
-// FillStroke first fills the paths and than strokes them
 func (gc *ImageContext) FillStroke(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
 	gc.fillRasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
@@ -328,20 +365,15 @@ func (gc *ImageContext) FillStroke(paths ...*Path) {
 		Flatten(p, demux, gc.Current.Trm.GetScale())
 	}
 
-	// Fill
 	gc.paint(gc.fillRasterizer, gc.Current.FillColor)
-	// Stroke
 	gc.paint(gc.strokeRasterizer, gc.Current.StrokeColor)
 }
 
 type ImageFilter int
 
 const (
-	// LinearFilter defines a linear filter
 	LinearFilter ImageFilter = iota
-	// BilinearFilter defines a bilinear filter
 	BilinearFilter
-	// BicubicFilter defines a bicubic filter
 	BicubicFilter
 )
 
@@ -385,7 +417,7 @@ func NewStackGraphicContext() *StackGraphicContext {
 	gc.Current.FillRule = FillRuleEvenOdd
 	gc.Current.Join = RoundJoin
 	gc.Current.FontSize = 10
-	// gc.Current.FontData = DefaultFontData
+	gc.Current.FontData = DefaultFontData
 	return gc
 }
 
@@ -478,16 +510,32 @@ func (gc *StackGraphicContext) MoveTo(x, y float64) {
 	gc.Current.Path.MoveTo(x, y)
 }
 
+func (gc *StackGraphicContext) MoveToPoint(pt Point) {
+	gc.MoveTo(pt.X, pt.Y)
+}
+
 func (gc *StackGraphicContext) LineTo(x, y float64) {
 	gc.Current.Path.LineTo(x, y)
+}
+
+func (gc *StackGraphicContext) LineToPoint(pt Point) {
+	gc.LineTo(pt.X, pt.Y)
 }
 
 func (gc *StackGraphicContext) QuadCurveTo(cx, cy, x, y float64) {
 	gc.Current.Path.QuadCurveTo(cx, cy, x, y)
 }
 
+func (gc *StackGraphicContext) QuadCurveToPoints(cp, pt Point) {
+	gc.Current.Path.QuadCurveTo(cp.X, cp.Y, pt.X, pt.Y)
+}
+
 func (gc *StackGraphicContext) CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64) {
 	gc.Current.Path.CubicCurveTo(cx1, cy1, cx2, cy2, x, y)
+}
+
+func (gc *StackGraphicContext) CubicCurveToPoints(cp1, cp2, pt Point) {
+	gc.Current.Path.CubicCurveTo(cp1.X, cp1.Y, cp2.X, cp2.Y, pt.X, pt.Y)
 }
 
 func (gc *StackGraphicContext) ClosePath() {

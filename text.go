@@ -2,15 +2,22 @@ package gfx
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 	"unicode"
 
 	"github.com/ahmetb/go-linq"
 )
 
-type Chars []Char
+// Writing modes
+const (
+	WModeHorizontal int = iota
+	WModeVertical
+)
 
-func (ch Chars) Orientation() (orientation Orientation) {
+type Letters []Letter
+
+func (ch Letters) Orientation() (orientation Orientation) {
 	if len(ch) == 0 {
 		return OtherOrientation
 	}
@@ -28,31 +35,31 @@ func (ch Chars) Orientation() (orientation Orientation) {
 	return
 }
 
-func (ch Chars) OrderByReadingOrder() (ret Chars) {
+func (ch Letters) OrderByReadingOrder() (ret Letters) {
 	if len(ch) <= 1 {
 		return ch
 	}
 
 	switch ch.Orientation() {
 	case PageUp:
-		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
 	case PageDown:
-		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ToSlice(&ret)
+		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
 	case PageLeft:
-		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 	case PageRight:
-		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 	default:
-		avgAngle := linq.From(ch).Select(func(i interface{}) interface{} { return i.(Char).Quad.Rotation() }).Average()
+		avgAngle := linq.From(ch).Select(func(i interface{}) interface{} { return i.(Letter).Quad.Rotation() }).Average()
 		switch {
 		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Char).Quad.BottomLeft.Y }).ToSlice(&ret)
+			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
 		default:
 			return ch
 		}
@@ -61,7 +68,7 @@ func (ch Chars) OrderByReadingOrder() (ret Chars) {
 	return
 }
 
-func (ch Chars) IsWhitespace() bool {
+func (ch Letters) IsWhitespace() bool {
 	for _, letter := range ch {
 		if !letter.IsWhitespace() {
 			return false
@@ -70,7 +77,7 @@ func (ch Chars) IsWhitespace() bool {
 	return true
 }
 
-func (ch Chars) GetMeanConfidence() float64 {
+func (ch Letters) GetMeanConfidence() float64 {
 	sum := 0.0
 	for _, c := range ch {
 		sum += c.Confidence
@@ -78,7 +85,7 @@ func (ch Chars) GetMeanConfidence() float64 {
 	return sum / float64(len(ch))
 }
 
-func (ch Chars) GetMeanDeskewAngle() float64 {
+func (ch Letters) GetMeanDeskewAngle() float64 {
 	sum := 0.0
 	for _, c := range ch {
 		sum += c.DeskewAngle
@@ -86,7 +93,7 @@ func (ch Chars) GetMeanDeskewAngle() float64 {
 	return sum / float64(len(ch))
 }
 
-type Char struct {
+type Letter struct {
 	Rune          rune
 	Quad          Quad
 	Confidence    float64
@@ -94,9 +101,12 @@ type Char struct {
 	DeskewAngle   float64
 	StartBaseline Point
 	EndBaseline   Point
+	Font          *FontData
+	Size          float64
+	Color         color.Color
 }
 
-func (l Char) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
+func (l Letter) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
 
 type TextWords []TextWord
 
@@ -161,7 +171,7 @@ type TextWord struct {
 	EndBaseline   Point
 }
 
-func MakeWord(letters Chars) (word TextWord) {
+func MakeWord(letters Letters) (word TextWord) {
 	if len(letters) == 0 {
 		return
 	}

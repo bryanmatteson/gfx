@@ -24,9 +24,11 @@ func (glyphCache *GlyphCacheImp) Fetch(gc *ImageContext, fontName string, chr ru
 	if glyphCache.glyphs[fontName] == nil {
 		glyphCache.glyphs[fontName] = make(map[rune]*Glyph, 60)
 	}
+
 	if glyphCache.glyphs[fontName][chr] == nil {
 		glyphCache.glyphs[fontName][chr] = renderGlyph(gc, fontName, chr)
 	}
+
 	return glyphCache.glyphs[fontName][chr].Copy()
 }
 
