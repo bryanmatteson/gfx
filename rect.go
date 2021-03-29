@@ -3,11 +3,57 @@ package gfx
 import (
 	"image"
 	"math"
+	"sort"
 )
 
 type Rects []Rect
 
-// CoalescedBounds ...
+func (r Rects) GroupRows() []Rects {
+	starts, ends := make(map[float64]struct{}, len(r)), make(map[float64]struct{}, len(r))
+	for _, rect := range r {
+		starts[rect.Y.Min], ends[rect.Y.Max] = struct{}{}, struct{}{}
+	}
+
+	ys := make([]float64, 0, len(starts)+len(ends))
+	for y := range starts {
+		ys = append(ys, y)
+	}
+
+	for y := range ends {
+		ys = append(ys, y)
+	}
+
+	sort.Float64s(ys)
+	rows := make([]Rects, 0)
+
+	var row Rects
+
+	var count = 0
+	for _, y := range ys {
+		for _, rect := range r {
+			if !EqualEpsilon(rect.Y.Min, y) && !EqualEpsilon(rect.Y.Max, y) {
+				continue
+			}
+
+			if EqualEpsilon(rect.Y.Min, y) {
+				count++
+			}
+			if EqualEpsilon(rect.Y.Max, y) {
+				count--
+			}
+
+			row = append(row, rect)
+
+			if count == 0 {
+				rows = append(rows, row)
+				row = nil
+			}
+		}
+	}
+
+	return rows
+}
+
 func (r Rects) Coalesce() Rects {
 	groups := make([]map[int]struct{}, 0)
 
