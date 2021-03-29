@@ -49,7 +49,7 @@ func NewRotationMatrixDeg(theta float64) Matrix {
 }
 
 // NewRotationMatrixRad creates a rotation transformation matrix. angle is in radian
-func NewRotationMatrixRad(theta float64) Matrix {
+func NewRotationMatrix(theta float64) Matrix {
 	c := math.Cos(theta)
 	s := math.Sin(theta)
 	return Matrix{c, s, -s, c, 0, 0}
@@ -57,6 +57,14 @@ func NewRotationMatrixRad(theta float64) Matrix {
 
 func (m Matrix) Translated(tx, ty float64) Matrix {
 	return m.Concat(NewTranslationMatrix(tx, ty))
+}
+
+func (m Matrix) Rotated(theta float64) Matrix {
+	return m.Concat(NewRotationMatrix(theta))
+}
+
+func (m Matrix) Scaled(sx, sy float64) Matrix {
+	return m.Concat(NewScaleMatrix(sx, sy))
 }
 
 func (m Matrix) Determinant() float64 {

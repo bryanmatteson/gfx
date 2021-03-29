@@ -1,7 +1,13 @@
 package gfx
 
 import (
+	"image"
 	"math"
+
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/draw"
+	"golang.org/x/image/math/f64"
+	"golang.org/x/image/math/fixed"
 )
 
 func Min4(a float64, b float64, c float64, d float64) float64 {
@@ -22,84 +28,6 @@ func QuadToRect(q Quad) (r Rect) {
 
 func RectToQuad(r Rect) Quad {
 	return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max)
-}
-
-func bezierBounds(x0, y0, x1, y1, x2, y2, x3, y3 float64) Rect {
-	var tvalues, xvalues, yvalues []float64
-	var a, b, c, t, t1, t2, b2ac, sqrtb2ac float64
-
-	for i := 0; i < 2; i++ {
-		if i == 0 {
-			b = 6*x0 - 12*x1 + 6*x2
-			a = -3*x0 + 9*x1 - 9*x2 + 3*x3
-			c = 3*x1 - 3*x0
-		} else {
-			b = 6*y0 - 12*y1 + 6*y2
-			a = -3*y0 + 9*y1 - 9*y2 + 3*y3
-			c = 3*y1 - 3*y0
-		}
-
-		if math.Abs(a) < 1e-12 {
-			if math.Abs(b) < 1e-12 {
-				continue
-			}
-
-			t = -c / b
-			if 0 < t && t < 1 {
-				tvalues = append(tvalues, t)
-			}
-			continue
-		}
-		b2ac = b*b - 4*c*a
-		if b2ac < 0 {
-			if math.Abs(b2ac) < 1e-12 {
-				t = -b / (2 * a)
-				if 0 < t && t < 1 {
-					tvalues = append(tvalues, t)
-				}
-			}
-			continue
-		}
-
-		sqrtb2ac = math.Sqrt(b2ac)
-		t1 = (-b + sqrtb2ac) / (2 * a)
-		if 0 < t1 && t1 < 1 {
-			tvalues = append(tvalues, t1)
-		}
-
-		t2 = (-b - sqrtb2ac) / (2 * a)
-		if 0 < t2 && t2 < 1 {
-			tvalues = append(tvalues, t2)
-		}
-	}
-
-	xvalues = make([]float64, len(tvalues))
-	yvalues = make([]float64, len(tvalues))
-
-	for j := len(tvalues) - 1; j >= 0; j-- {
-		t = tvalues[j]
-		mt := 1 - t
-		xvalues[j] = (mt * mt * mt * x0) + (3 * mt * mt * t * x1) + (3 * mt * t * t * x2) + (t * t * t * x3)
-		yvalues[j] = (mt * mt * mt * y0) + (3 * mt * mt * t * y1) + (3 * mt * t * t * y2) + (t * t * t * y3)
-	}
-
-	xvalues = append(xvalues, x0, x3)
-	yvalues = append(yvalues, y0, y3)
-
-	minx, miny := math.Inf(1), math.Inf(1)
-	maxx, maxy := math.Inf(-1), math.Inf(-1)
-
-	for _, x := range xvalues {
-		minx = math.Min(minx, x)
-		maxx = math.Max(maxx, x)
-	}
-
-	for _, y := range yvalues {
-		miny = math.Min(miny, y)
-		maxy = math.Max(maxy, y)
-	}
-
-	return MakeRectCorners(minx, miny, maxx, maxy)
 }
 
 // Epsilon is the smallest number below which we assume to be zero
@@ -131,4 +59,84 @@ func BoundAngle180(angle float64) float64 {
 
 func LineAngle(p1, p2 Point) float64 {
 	return math.Atan2(p2.Y-p1.Y, p2.X-p1.X) * 180 / math.Pi
+}
+
+func imageToRGBA(src image.Image) *image.RGBA {
+	bounds := src.Bounds()
+	dst := image.NewRGBA(bounds)
+	draw.Draw(dst, bounds, src, bounds.Min, draw.Src)
+	return dst
+}
+
+func pointToF64Point(p truetype.Point) (x, y float64) {
+	return fUnitsToFloat64(p.X), -fUnitsToFloat64(p.Y)
+}
+
+func fUnitsToFloat64(x fixed.Int26_6) float64 {
+	scaled := x << 2
+	return float64(scaled/256) + float64(scaled%256)/256.0
+}
+
+// DrawContour draws the given closed contour at the given sub-pixel offset.
+func DrawContour(path PathBuilder, ps []truetype.Point, dx, dy float64) {
+	if len(ps) == 0 {
+		return
+	}
+	startX, startY := pointToF64Point(ps[0])
+	var others []truetype.Point
+	if ps[0].Flags&0x01 != 0 {
+		others = ps[1:]
+	} else {
+		lastX, lastY := pointToF64Point(ps[len(ps)-1])
+		if ps[len(ps)-1].Flags&0x01 != 0 {
+			startX, startY = lastX, lastY
+			others = ps[:len(ps)-1]
+		} else {
+			startX = (startX + lastX) / 2
+			startY = (startY + lastY) / 2
+			others = ps
+		}
+	}
+	path.MoveTo(startX+dx, startY+dy)
+	q0X, q0Y, on0 := startX, startY, true
+	for _, p := range others {
+		qX, qY := pointToF64Point(p)
+		on := p.Flags&0x01 != 0
+		if on {
+			if on0 {
+				path.LineTo(qX+dx, qY+dy)
+			} else {
+				path.QuadCurveTo(q0X+dx, q0Y+dy, qX+dx, qY+dy)
+			}
+		} else {
+			if on0 {
+				// No-op.
+			} else {
+				midX := (q0X + qX) / 2
+				midY := (q0Y + qY) / 2
+				path.QuadCurveTo(q0X+dx, q0Y+dy, midX+dx, midY+dy)
+			}
+		}
+		q0X, q0Y, on0 = qX, qY, on
+	}
+	// Close the curve.
+	if on0 {
+		path.LineTo(startX+dx, startY+dy)
+	} else {
+		path.QuadCurveTo(q0X+dx, q0Y+dy, startX+dx, startY+dy)
+	}
+}
+
+// DrawImage draws an image into dest using an affine transformation matrix, an op and a filter
+func DrawImage(src image.Image, dest draw.Image, tr Matrix, op draw.Op, filter ImageFilter) {
+	var transformer draw.Transformer
+	switch filter {
+	case LinearFilter:
+		transformer = draw.NearestNeighbor
+	case BilinearFilter:
+		transformer = draw.BiLinear
+	case BicubicFilter:
+		transformer = draw.CatmullRom
+	}
+	transformer.Transform(dest, f64.Aff3{tr.A, tr.B, tr.E, tr.C, tr.D, tr.F}, src, src.Bounds(), op, nil)
 }
