@@ -65,7 +65,7 @@ type Font interface {
 	BoundingBox() Rect
 	Info() FontData
 	Glyph(chr rune, trm Matrix) *Glyph
-	Advance(chr rune) float64
+	Advance(chr rune, mode int) float64
 }
 
 type FontCache interface {
