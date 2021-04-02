@@ -64,7 +64,7 @@ type Font interface {
 	Name() string
 	BoundingBox() Rect
 	Info() FontData
-	Glyph(chr rune) *Glyph
+	Glyph(chr rune, trm Matrix) *Glyph
 	Advance(chr rune) float64
 }
 
