@@ -80,7 +80,7 @@ func bezierBounds(x0, y0, x1, y1, x2, y2, x3, y3 float64) Rect {
 		maxy = math.Max(maxy, y)
 	}
 
-	return MakeRectCorners(minx, miny, maxx, maxy)
+	return MakeRect(minx, miny, maxx, maxy)
 }
 
 const (

@@ -18,18 +18,6 @@ func Max4(a float64, b float64, c float64, d float64) float64 {
 	return math.Max(math.Max(a, b), math.Max(c, d))
 }
 
-func QuadToRect(q Quad) (r Rect) {
-	r.X.Min = Min4(q.BottomLeft.X, q.BottomRight.X, q.TopLeft.X, q.TopRight.X)
-	r.Y.Min = Min4(q.BottomLeft.Y, q.BottomRight.Y, q.TopLeft.Y, q.TopRight.Y)
-	r.X.Max = Max4(q.BottomLeft.X, q.BottomRight.X, q.TopLeft.X, q.TopRight.X)
-	r.Y.Max = Max4(q.BottomLeft.Y, q.BottomRight.Y, q.TopLeft.Y, q.TopRight.Y)
-	return
-}
-
-func RectToQuad(r Rect) Quad {
-	return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max)
-}
-
 // Epsilon is the smallest number below which we assume to be zero
 var Epsilon = math.Nextafter(1.0, 2.0) - 1
 
@@ -57,11 +45,7 @@ func BoundAngle180(angle float64) float64 {
 	return angle - 180
 }
 
-func LineAngle(p1, p2 Point) float64 {
-	return math.Atan2(p2.Y-p1.Y, p2.X-p1.X) * 180 / math.Pi
-}
-
-func imageToRGBA(src image.Image) *image.RGBA {
+func ImageToRGBA(src image.Image) *image.RGBA {
 	bounds := src.Bounds()
 	dst := image.NewRGBA(bounds)
 	draw.Draw(dst, bounds, src, bounds.Min, draw.Src)

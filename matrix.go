@@ -172,7 +172,7 @@ func (m Matrix) TransformRect(r Rect) Rect {
 	maxX := Max4(s.X, t.X, u.X, v.X)
 	maxY := Max4(s.Y, t.Y, u.Y, v.Y)
 
-	return MakeRectCorners(minX, minY, maxX, maxY)
+	return MakeRect(minX, minY, maxX, maxY)
 }
 
 func (m Matrix) TransformQuad(q Quad) (result Quad) {

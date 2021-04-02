@@ -1,13 +1,20 @@
-package gfx
+package font
 
 import (
 	"errors"
 	"sync"
 
 	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
 )
 
-var DefaultFontData = FontData{Name: "Arial", Family: FontFamilySans, Style: FontStyleNormal}
+type Hinting = font.Hinting
+
+const (
+	HintingNone     = font.HintingNone
+	HintingVertical = font.HintingVertical
+	HintingFull     = font.HintingFull
+)
 
 type FontStyle byte
 

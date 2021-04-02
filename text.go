@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/ahmetb/go-linq"
+	"go.matteson.dev/gfx/font"
 )
 
 // Writing modes
@@ -101,7 +102,7 @@ type Letter struct {
 	DeskewAngle   float64
 	StartBaseline Point
 	EndBaseline   Point
-	Font          *FontData
+	Font          *font.FontData
 	Size          float64
 	Color         color.Color
 }
@@ -279,7 +280,7 @@ type TextLine struct {
 }
 
 func MakeTextLine(words TextWords, sep string) TextLine {
-	var quads Quads = make(Quads, len(words))
+	var quads = make(Quads, len(words))
 	for i, l := range words {
 		quads[i] = l.Quad
 	}
@@ -322,7 +323,7 @@ type TextBlock struct {
 }
 
 func MakeTextBlock(lines TextLines, sep string) TextBlock {
-	var quads Quads = make(Quads, len(lines))
+	var quads = make(Quads, len(lines))
 	for i, l := range lines {
 		quads[i] = l.Quad
 	}

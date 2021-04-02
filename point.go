@@ -9,6 +9,8 @@ type Point struct {
 	X, Y float64
 }
 
+func MakePoint(x, y float64) Point { return Point{X: x, Y: y} }
+
 // Add returns the sum of p and op.
 func (p Point) Add(op Point) Point { return Point{p.X + op.X, p.Y + op.Y} }
 

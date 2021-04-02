@@ -17,7 +17,13 @@ func MakeQuad(left, bottom, right, top float64) Quad {
 	return Quad{Point{left, bottom}, Point{left, top}, Point{right, top}, Point{right, bottom}}
 }
 
-func (q Quad) Bounds() Rect { return QuadToRect(q) }
+func (q Quad) Bounds() (r Rect) {
+	r.X.Min = Min4(q.BottomLeft.X, q.BottomRight.X, q.TopLeft.X, q.TopRight.X)
+	r.Y.Min = Min4(q.BottomLeft.Y, q.BottomRight.Y, q.TopLeft.Y, q.TopRight.Y)
+	r.X.Max = Max4(q.BottomLeft.X, q.BottomRight.X, q.TopLeft.X, q.TopRight.X)
+	r.Y.Max = Max4(q.BottomLeft.Y, q.BottomRight.Y, q.TopLeft.Y, q.TopRight.Y)
+	return
+}
 
 func (q Quad) Left() float64 {
 	if q.TopLeft.X < q.TopRight.X {

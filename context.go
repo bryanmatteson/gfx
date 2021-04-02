@@ -11,9 +11,11 @@ import (
 
 	"github.com/golang/freetype/raster"
 	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
+	"go.matteson.dev/gfx/font"
 	"golang.org/x/image/math/fixed"
 )
+
+var DefaultFontData = font.FontData{Name: "Arial", Family: font.FontFamilySans, Style: font.FontStyleNormal}
 
 // Painter implements the freetype raster.Painter and has a SetColor method like the RGBAPainter
 type Painter interface {
@@ -27,7 +29,7 @@ type ImageContext struct {
 	painter          Painter
 	fillRasterizer   *raster.Rasterizer
 	strokeRasterizer *raster.Rasterizer
-	FontCache        FontCache
+	FontCache        font.FontCache
 	glyphCache       GlyphCache
 	glyphBuf         *truetype.GlyphBuf
 	DPI              int
@@ -41,7 +43,7 @@ func NewImageContext(img draw.Image) *ImageContext {
 	case *image.RGBA:
 		painter = raster.NewRGBAPainter(selectImage)
 	default:
-		img = imageToRGBA(img)
+		img = ImageToRGBA(img)
 		painter = raster.NewRGBAPainter(img.(*image.RGBA))
 	}
 	return NewImageContextWithPainter(img, painter)
@@ -57,7 +59,7 @@ func NewImageContextWithPainter(img draw.Image, painter Painter) *ImageContext {
 		painter:             painter,
 		fillRasterizer:      raster.NewRasterizer(width, height),
 		strokeRasterizer:    raster.NewRasterizer(width, height),
-		FontCache:           GetGlobalFontCache(),
+		FontCache:           font.GetGlobalFontCache(),
 		glyphCache:          NewGlyphCache(),
 		glyphBuf:            &truetype.GlyphBuf{},
 		DPI:                 dpi,
@@ -393,7 +395,7 @@ type ContextStack struct {
 	Cap         LineCap
 	Join        LineJoin
 	FontSize    float64
-	FontData    FontData
+	FontData    font.FontData
 	Font        *truetype.Font
 	Scale       float64
 
@@ -482,11 +484,11 @@ func (gc *StackGraphicContext) GetFontSize() float64 {
 	return gc.Current.FontSize
 }
 
-func (gc *StackGraphicContext) SetFontData(fontData FontData) {
+func (gc *StackGraphicContext) SetFontData(fontData font.FontData) {
 	gc.Current.FontData = fontData
 }
 
-func (gc *StackGraphicContext) GetFontData() FontData {
+func (gc *StackGraphicContext) GetFontData() font.FontData {
 	return gc.Current.FontData
 }
 

@@ -97,7 +97,7 @@ func (r Rects) Coalesce() Rects {
 			maxy = math.Max(maxy, r[idx].Y.Max)
 		}
 
-		coalesced[i] = MakeRectCorners(minx, miny, maxx, maxy)
+		coalesced[i] = MakeRect(minx, miny, maxx, maxy)
 	}
 
 	return coalesced
@@ -115,7 +115,7 @@ func (r Rects) Union() (u Rect) {
 		maxy = math.Max(maxy, rect.Y.Max)
 	}
 
-	return MakeRectCorners(minx, miny, maxx, maxy)
+	return MakeRect(minx, miny, maxx, maxy)
 }
 
 type Rect struct {
@@ -123,16 +123,18 @@ type Rect struct {
 }
 
 func MakeRectWH(x, y, w, h float64) Rect {
-	return MakeRectCorners(x, y, x+w, y+h)
+	return MakeRect(x, y, x+w, y+h)
 }
 
-func MakeRectCorners(x0, y0, x1, y1 float64) Rect {
+func MakeRect(x0, y0, x1, y1 float64) Rect {
 	if x0 > x1 {
 		x0, x1 = x1, x0
 	}
+
 	if y0 > y1 {
 		y0, y1 = y1, y0
 	}
+
 	return Rect{Range{x0, x1}, Range{y0, y1}}
 }
 
@@ -251,4 +253,5 @@ func (r Rect) ContainsAllPointsInPath(p *Path) bool {
 
 func (r Rect) Width() float64  { return r.X.Length() }
 func (r Rect) Height() float64 { return r.Y.Length() }
+func (r Rect) Quad() Quad      { return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max) }
 func (r Rect) IsEmpty() bool   { return r.X.IsEmpty() || r.Y.IsEmpty() }

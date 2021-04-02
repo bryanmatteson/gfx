@@ -173,7 +173,7 @@ func (p *Path) ApproxBounds() Rect {
 
 		j += cmd.PointCount()
 	}
-	return MakeRectCorners(minx, miny, maxx, maxy)
+	return MakeRect(minx, miny, maxx, maxy)
 }
 
 func (p *Path) Bounds() Rect {
@@ -229,5 +229,5 @@ func (p *Path) Bounds() Rect {
 		j += cmd.PointCount()
 	}
 
-	return MakeRectCorners(minx, miny, maxx, maxy)
+	return MakeRect(minx, miny, maxx, maxy)
 }
