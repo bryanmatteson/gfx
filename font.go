@@ -70,7 +70,7 @@ type Font interface {
 
 type FontCache interface {
 	Load(FontData) (Font, error)
-	Store(FontData, Font)
+	Store(Font)
 }
 
 type Glyph struct {
