@@ -7,7 +7,6 @@ import (
 	"unicode"
 
 	"github.com/ahmetb/go-linq"
-	"go.matteson.dev/gfx/font"
 )
 
 // Writing modes
@@ -102,7 +101,7 @@ type Letter struct {
 	DeskewAngle   float64
 	StartBaseline Point
 	EndBaseline   Point
-	Font          *font.FontData
+	Font          *FontData
 	Size          float64
 	Color         color.Color
 }
