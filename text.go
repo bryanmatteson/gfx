@@ -95,6 +95,7 @@ func (ch Letters) GetMeanDeskewAngle() float64 {
 
 type Letter struct {
 	Rune          rune
+	GlyphID       int
 	Quad          Quad
 	Confidence    float64
 	Orientation   Orientation
@@ -103,7 +104,7 @@ type Letter struct {
 	EndBaseline   Point
 	GlyphPath     *Path
 	Font          *FontData
-	Size          float64
+	FontSize      float64
 	Color         color.Color
 }
 

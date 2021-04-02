@@ -21,6 +21,7 @@ type ImageContext struct {
 	*StackGraphicContext
 	img              draw.Image
 	painter          Painter
+	fontCache        FontCache
 	fillRasterizer   *raster.Rasterizer
 	strokeRasterizer *raster.Rasterizer
 	dpi              int
@@ -40,21 +41,22 @@ func NewImageContext(img draw.Image) *ImageContext {
 	return NewImageContextWithPainter(img, painter)
 }
 
-// NewImageContextWithPainter creates a new Graphic context from an image and a Painter (see Freetype-go)
+// NewImageContextWithPainter creates a new Graphic context from an image and a Painter
 func NewImageContextWithPainter(img draw.Image, painter Painter) *ImageContext {
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
-	dpi := 92
 	gc := &ImageContext{
 		StackGraphicContext: NewStackGraphicContext(),
 		img:                 img,
 		painter:             painter,
 		fillRasterizer:      raster.NewRasterizer(width, height),
 		strokeRasterizer:    raster.NewRasterizer(width, height),
-		dpi:                 dpi,
+		dpi:                 92,
 		filter:              BilinearFilter,
 	}
 	return gc
 }
+
+func (gc *ImageContext) SetFontCache(cache FontCache) { gc.fontCache = cache }
 
 func (gc *ImageContext) GetDPI() int { return gc.dpi }
 
@@ -225,6 +227,7 @@ type ContextStack struct {
 	Join        LineJoin
 	FontSize    float64
 	FontData    FontData
+	Font        Font
 	Scale       float64
 
 	Previous *ContextStack
@@ -315,6 +318,14 @@ func (gc *StackGraphicContext) GetFontData() FontData {
 	return gc.Current.FontData
 }
 
+func (gc *StackGraphicContext) SetFont(font Font) {
+	gc.Current.Font = font
+}
+
+func (gc *StackGraphicContext) GetFont() Font {
+	return gc.Current.Font
+}
+
 func (gc *StackGraphicContext) BeginPath() {
 	gc.Current.Path.Clear()
 }
@@ -371,6 +382,7 @@ func (gc *StackGraphicContext) Save() {
 	context := new(ContextStack)
 	context.FontSize = gc.Current.FontSize
 	context.FontData = gc.Current.FontData
+	context.Font = gc.Current.Font
 	context.LineWidth = gc.Current.LineWidth
 	context.StrokeColor = gc.Current.StrokeColor
 	context.FillColor = gc.Current.FillColor
