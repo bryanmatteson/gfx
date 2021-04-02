@@ -101,6 +101,7 @@ type Letter struct {
 	DeskewAngle   float64
 	StartBaseline Point
 	EndBaseline   Point
+	GlyphPath     *Path
 	Font          *FontData
 	Size          float64
 	Color         color.Color
