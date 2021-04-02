@@ -63,7 +63,7 @@ func (f FontData) String() string {
 type Font interface {
 	Name() string
 	BoundingBox() Rect
-	Info() *FontData
+	Info() FontData
 	Glyph(chr rune) *Glyph
 	Advance(chr rune) float64
 }
