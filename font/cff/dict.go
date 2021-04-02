@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"go.matteson.dev/gfx"
+	"go.matteson.dev/gfx/font/adobe"
 )
 
 const (
@@ -14,25 +15,8 @@ const (
 	DefaultLanguageGroup   int     = 0
 )
 
-type AdobePrivateDictionary struct {
-	BlueValues               []int
-	OtherBlues               []int
-	FamilyBlues              []int
-	FamilyOtherBlues         []int
-	BlueScale                float64
-	BlueShift                int
-	BlueFuzz                 int
-	StandardHorizontalWidth  float64
-	StandardVerticalWidth    float64
-	StemSnapHorizontalWidths []float64
-	StemSnapVerticalWidths   []float64
-	ForceBold                bool
-	LanguageGroup            int
-	ExpansionFactor          float64
-}
-
 type PrivateDictionary struct {
-	AdobePrivateDictionary
+	adobe.PrivateDictionary
 	InitialRandomSeed     float64
 	LocalSubroutineOffset int
 	DefaultWidthX         float64
@@ -41,7 +25,7 @@ type PrivateDictionary struct {
 
 func newPrivateDictionary() *PrivateDictionary {
 	priv := &PrivateDictionary{
-		AdobePrivateDictionary: AdobePrivateDictionary{
+		PrivateDictionary: adobe.PrivateDictionary{
 			BlueScale:       DefaultBlueScale,
 			ExpansionFactor: DefaultExpansionFactor,
 			BlueFuzz:        DefaultBlueFuzz,
@@ -79,23 +63,23 @@ func (priv *PrivateDictionary) init(data []byte) error {
 			priv.DefaultWidthX = cmd.args[0]
 		case 21:
 			priv.NominalWidthX = cmd.args[0]
-		case 1009:
+		case 1209:
 			priv.BlueScale = cmd.args[0]
-		case 1010:
+		case 1210:
 			priv.BlueShift = int(cmd.args[0])
-		case 1011:
+		case 1211:
 			priv.BlueFuzz = int(cmd.args[0])
-		case 1012:
+		case 1212:
 			priv.StemSnapHorizontalWidths = deltaFloats(cmd.args)
-		case 1013:
+		case 1213:
 			priv.StemSnapVerticalWidths = deltaFloats(cmd.args)
-		case 1014:
+		case 1214:
 			priv.ForceBold = cmd.args[0] == 1
-		case 1017:
+		case 1217:
 			priv.LanguageGroup = int(cmd.args[0])
-		case 1018:
+		case 1218:
 			priv.ExpansionFactor = cmd.args[0]
-		case 1019:
+		case 1219:
 			priv.InitialRandomSeed = cmd.args[0]
 		}
 	}
@@ -185,21 +169,21 @@ func (tld *TopLevelDictionary) init(data []byte, strIndex strtable) error {
 		case 18:
 			tld.PrivateDictSize = int(cmd.args[0])
 			tld.PrivateDictOffset = int(cmd.args[1])
-		case 1000:
+		case 1200:
 			tld.Copyright = strIndex.GetName(int(cmd.args[0]))
-		case 1001:
+		case 1201:
 			tld.IsFixedPitch = int(cmd.args[0]) == 1
-		case 1002:
+		case 1202:
 			tld.ItalicAngle = cmd.args[0]
-		case 1003:
+		case 1203:
 			tld.UnderlinePosition = cmd.args[0]
-		case 1004:
+		case 1204:
 			tld.UnderlineThickness = cmd.args[0]
-		case 1005:
+		case 1205:
 			tld.PaintType = cmd.args[0]
-		case 1006:
+		case 1206:
 			tld.CharStringType = CharStringType(int(cmd.args[0]))
-		case 1007:
+		case 1207:
 			switch {
 			case len(cmd.args) == 4:
 				tld.FontMatrix = gfx.NewMatrix(cmd.args[0], cmd.args[1], 0, cmd.args[2], cmd.args[3], 0)
@@ -208,18 +192,18 @@ func (tld *TopLevelDictionary) init(data []byte, strIndex strtable) error {
 			default:
 				return fmt.Errorf("invalid number of values for font matrix, got %d", len(cmd.args))
 			}
-		case 1008:
+		case 1208:
 			tld.StrokeWidth = cmd.args[0]
-		case 1020:
+		case 1220:
 			tld.SyntheticBaseFontIndex = int(cmd.args[0])
-		case 1021:
+		case 1221:
 			tld.PostScript = strIndex.GetName(int(cmd.args[0]))
-		case 1022:
+		case 1222:
 			tld.BaseFontName = strIndex.GetName(int(cmd.args[0]))
-		case 1023:
+		case 1223:
 			tld.BaseFontBlend = deltaFloats(cmd.args)
 
-		case 1030:
+		case 1230:
 			tld.IsCidFont = true
 			tld.CidFontOperators.Ros = RegistryOrderingSupplement{
 				Registry:   strIndex.GetName(int(cmd.args[0])),
@@ -227,28 +211,28 @@ func (tld *TopLevelDictionary) init(data []byte, strIndex strtable) error {
 				Supplement: cmd.args[2],
 			}
 
-		case 1031:
+		case 1231:
 			tld.IsCidFont = true
 			tld.CidFontOperators.Version = int(cmd.args[0])
-		case 1032:
+		case 1232:
 			tld.IsCidFont = true
 			tld.CidFontOperators.Revision = int(cmd.args[0])
-		case 1033:
+		case 1233:
 			tld.IsCidFont = true
 			tld.CidFontOperators.Type = int(cmd.args[0])
-		case 1034:
+		case 1234:
 			tld.IsCidFont = true
 			tld.CidFontOperators.Count = int(cmd.args[0])
-		case 1035:
+		case 1235:
 			tld.IsCidFont = true
 			tld.CidFontOperators.UIDBase = cmd.args[0]
-		case 1036:
+		case 1236:
 			tld.IsCidFont = true
 			tld.CidFontOperators.FontDictionaryArray = int(cmd.args[0])
-		case 1037:
+		case 1237:
 			tld.IsCidFont = true
 			tld.CidFontOperators.FontDictionarySelect = int(cmd.args[0])
-		case 1038:
+		case 1238:
 			tld.IsCidFont = true
 			tld.CidFontOperators.FontName = strIndex.GetName(int(cmd.args[0]))
 		}

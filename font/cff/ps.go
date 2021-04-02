@@ -155,7 +155,7 @@ func parseCommandSequence(data []byte, ctx psContext) (pscmdseq, error) {
 			}
 			b, data = data[0], data[1:]
 			ops, oplen = psoperators[ctx][1], 2
-			id = 1000 + int(b)
+			id = 1200 + int(b)
 		}
 
 		if int(b) >= len(ops) {

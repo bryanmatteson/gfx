@@ -74,8 +74,8 @@ const (
 	t2cmdCallgsubr  = 29
 	t2cmdVhcurveto  = 30
 	t2cmdHvcurveto  = 31
-	t2cmdHflex      = 1034
-	t2cmdHflex1     = 1036
+	t2cmdHflex      = 1234
+	t2cmdHflex1     = 1236
 )
 
 type fstack []float64
