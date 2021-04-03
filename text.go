@@ -1,346 +1,314 @@
 package gfx
 
-import (
-	"fmt"
-	"image/color"
-	"strings"
-	"unicode"
+// // Writing modes
+// const (
+// 	WModeHorizontal int = iota
+// 	WModeVertical
+// )
 
-	"github.com/ahmetb/go-linq"
-)
+// type Letters []Letter
+// type Letter struct {
+// 	Rune     rune
+// 	GlyphID  int
+// 	Origin   Point
+// 	FontData *FontData
+// 	FontSize float64
+// 	Color    color.Color
+// }
 
-// Writing modes
-const (
-	WModeHorizontal int = iota
-	WModeVertical
-)
+// func (ch Letters) Orientation() (orientation Orientation) {
+// 	if len(ch) == 0 {
+// 		return OtherOrientation
+// 	}
 
-type Letters []Letter
+// 	orientation = ch[0].Orientation
+// 	if orientation == OtherOrientation {
+// 		return
+// 	}
 
-func (ch Letters) Orientation() (orientation Orientation) {
-	if len(ch) == 0 {
-		return OtherOrientation
-	}
+// 	for _, word := range ch[1:] {
+// 		if word.Orientation != orientation {
+// 			return OtherOrientation
+// 		}
+// 	}
+// 	return
+// }
 
-	orientation = ch[0].Orientation
-	if orientation == OtherOrientation {
-		return
-	}
+// func (ch Letters) OrderByReadingOrder() (ret Letters) {
+// 	if len(ch) <= 1 {
+// 		return ch
+// 	}
 
-	for _, word := range ch[1:] {
-		if word.Orientation != orientation {
-			return OtherOrientation
-		}
-	}
-	return
-}
+// 	switch ch.Orientation() {
+// 	case PageUp:
+// 		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	case PageDown:
+// 		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	case PageLeft:
+// 		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	case PageRight:
+// 		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	default:
+// 		avgAngle := linq.From(ch).Select(func(i interface{}) interface{} { return i.(Letter).Quad.Rotation() }).Average()
+// 		switch {
+// 		case 0 < avgAngle && avgAngle <= 90:
+// 			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case 90 < avgAngle && avgAngle <= 180:
+// 			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case -180 < avgAngle && avgAngle <= -90:
+// 			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case -90 < avgAngle && avgAngle <= 0:
+// 			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		default:
+// 			return ch
+// 		}
+// 	}
 
-func (ch Letters) OrderByReadingOrder() (ret Letters) {
-	if len(ch) <= 1 {
-		return ch
-	}
+// 	return
+// }
 
-	switch ch.Orientation() {
-	case PageUp:
-		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
-	case PageDown:
-		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ToSlice(&ret)
-	case PageLeft:
-		linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case PageRight:
-		linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-	default:
-		avgAngle := linq.From(ch).Select(func(i interface{}) interface{} { return i.(Letter).Quad.Rotation() }).Average()
-		switch {
-		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(ch).OrderByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(ch).OrderBy(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(Letter).Quad.BottomLeft.Y }).ToSlice(&ret)
-		default:
-			return ch
-		}
-	}
+// func (ch Letters) IsWhitespace() bool {
+// 	for _, letter := range ch {
+// 		if !letter.IsWhitespace() {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
-	return
-}
+// func (l Letter) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
 
-func (ch Letters) IsWhitespace() bool {
-	for _, letter := range ch {
-		if !letter.IsWhitespace() {
-			return false
-		}
-	}
-	return true
-}
+// type TextWords []TextWord
 
-func (ch Letters) GetMeanConfidence() float64 {
-	sum := 0.0
-	for _, c := range ch {
-		sum += c.Confidence
-	}
-	return sum / float64(len(ch))
-}
+// func (w TextWords) Orientation() (orientation Orientation) {
+// 	if len(w) == 0 {
+// 		return OtherOrientation
+// 	}
 
-func (ch Letters) GetMeanDeskewAngle() float64 {
-	sum := 0.0
-	for _, c := range ch {
-		sum += c.DeskewAngle
-	}
-	return sum / float64(len(ch))
-}
+// 	orientation = w[0].Orientation
+// 	if orientation == OtherOrientation {
+// 		return
+// 	}
 
-type Letter struct {
-	Rune          rune
-	GlyphID       int
-	Quad          Quad
-	Confidence    float64
-	Orientation   Orientation
-	DeskewAngle   float64
-	StartBaseline Point
-	EndBaseline   Point
-	GlyphPath     *Path
-	Font          *FontData
-	FontSize      float64
-	Color         color.Color
-}
+// 	for _, word := range w[1:] {
+// 		if word.Orientation != orientation {
+// 			return OtherOrientation
+// 		}
+// 	}
+// 	return
+// }
 
-func (l Letter) IsWhitespace() bool { return unicode.IsSpace(l.Rune) }
+// func (w TextWords) OrderByReadingOrder() (ret TextWords) {
+// 	if len(w) <= 1 {
+// 		return w
+// 	}
 
-type TextWords []TextWord
+// 	switch w.Orientation() {
+// 	case PageUp:
+// 		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	case PageDown:
+// 		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	case PageLeft:
+// 		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	case PageRight:
+// 		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	default:
+// 		avgAngle := linq.From(w).Select(func(i interface{}) interface{} { return i.(TextWord).Quad.Rotation() }).Average()
+// 		switch {
+// 		case 0 < avgAngle && avgAngle <= 90:
+// 			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case 90 < avgAngle && avgAngle <= 180:
+// 			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case -180 < avgAngle && avgAngle <= -90:
+// 			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case -90 < avgAngle && avgAngle <= 0:
+// 			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		default:
+// 			return w
+// 		}
+// 	}
 
-func (w TextWords) Orientation() (orientation Orientation) {
-	if len(w) == 0 {
-		return OtherOrientation
-	}
+// 	return
+// }
 
-	orientation = w[0].Orientation
-	if orientation == OtherOrientation {
-		return
-	}
+// type TextWord struct {
+// 	Value         string
+// 	Quad          Quad
+// 	Confidence    float64
+// 	Orientation   Orientation
+// 	DeskewAngle   float64
+// 	StartBaseline Point
+// 	EndBaseline   Point
+// }
 
-	for _, word := range w[1:] {
-		if word.Orientation != orientation {
-			return OtherOrientation
-		}
-	}
-	return
-}
+// func MakeWord(letters Letters) (word TextWord) {
+// 	if len(letters) == 0 {
+// 		return
+// 	}
 
-func (w TextWords) OrderByReadingOrder() (ret TextWords) {
-	if len(w) <= 1 {
-		return w
-	}
+// 	if len(letters) == 1 {
+// 		word.Confidence = letters[0].Confidence
+// 		word.DeskewAngle = letters[0].DeskewAngle
+// 		word.Quad = letters[0].Quad
+// 		word.EndBaseline = letters[0].EndBaseline
+// 		word.StartBaseline = letters[0].StartBaseline
+// 		word.EndBaseline = letters[0].EndBaseline
+// 		word.Orientation = letters[0].Orientation
+// 		word.Value = fmt.Sprintf("%c", letters[0].Rune)
+// 		return
+// 	}
 
-	switch w.Orientation() {
-	case PageUp:
-		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
-	case PageDown:
-		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ToSlice(&ret)
-	case PageLeft:
-		linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case PageRight:
-		linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-	default:
-		avgAngle := linq.From(w).Select(func(i interface{}) interface{} { return i.(TextWord).Quad.Rotation() }).Average()
-		switch {
-		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(w).OrderByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(w).OrderBy(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextWord).Quad.BottomLeft.Y }).ToSlice(&ret)
-		default:
-			return w
-		}
-	}
+// 	letters = letters.OrderByReadingOrder()
 
-	return
-}
+// 	quads := make(Quads, len(letters))
+// 	for i, letter := range letters {
+// 		quads[i] = letter.Quad
+// 	}
 
-type TextWord struct {
-	Value         string
-	Quad          Quad
-	Confidence    float64
-	Orientation   Orientation
-	DeskewAngle   float64
-	StartBaseline Point
-	EndBaseline   Point
-}
+// 	var builder strings.Builder
+// 	for _, letter := range letters {
+// 		builder.WriteRune(letter.Rune)
+// 	}
+// 	word.Value = builder.String()
+// 	word.Confidence = letters.GetMeanConfidence()
+// 	word.DeskewAngle = letters.GetMeanDeskewAngle()
+// 	word.Orientation = letters.Orientation()
+// 	word.StartBaseline = letters[0].StartBaseline
+// 	word.EndBaseline = letters[len(letters)-1].EndBaseline
+// 	word.Quad = quads.Union()
 
-func MakeWord(letters Letters) (word TextWord) {
-	if len(letters) == 0 {
-		return
-	}
+// 	return
+// }
 
-	if len(letters) == 1 {
-		word.Confidence = letters[0].Confidence
-		word.DeskewAngle = letters[0].DeskewAngle
-		word.Quad = letters[0].Quad
-		word.EndBaseline = letters[0].EndBaseline
-		word.StartBaseline = letters[0].StartBaseline
-		word.EndBaseline = letters[0].EndBaseline
-		word.Orientation = letters[0].Orientation
-		word.Value = fmt.Sprintf("%c", letters[0].Rune)
-		return
-	}
+// func (w TextWord) IsWhitespace() bool {
+// 	return strings.TrimSpace(w.Value) == ""
+// }
 
-	letters = letters.OrderByReadingOrder()
+// func (w TextWord) String() string {
+// 	return w.Value
+// }
 
-	quads := make(Quads, len(letters))
-	for i, letter := range letters {
-		quads[i] = letter.Quad
-	}
+// type TextLines []TextLine
 
-	var builder strings.Builder
-	for _, letter := range letters {
-		builder.WriteRune(letter.Rune)
-	}
-	word.Value = builder.String()
-	word.Confidence = letters.GetMeanConfidence()
-	word.DeskewAngle = letters.GetMeanDeskewAngle()
-	word.Orientation = letters.Orientation()
-	word.StartBaseline = letters[0].StartBaseline
-	word.EndBaseline = letters[len(letters)-1].EndBaseline
-	word.Quad = quads.Union()
+// func (l TextLines) Orientation() (orientation Orientation) {
+// 	if len(l) == 0 {
+// 		return OtherOrientation
+// 	}
 
-	return
-}
+// 	orientation = l[0].Orientation
+// 	if orientation == OtherOrientation {
+// 		return
+// 	}
 
-func (w TextWord) IsWhitespace() bool {
-	return strings.TrimSpace(w.Value) == ""
-}
+// 	for _, word := range l[1:] {
+// 		if word.Orientation != orientation {
+// 			return OtherOrientation
+// 		}
+// 	}
+// 	return
+// }
 
-func (w TextWord) String() string {
-	return w.Value
-}
+// func (l TextLines) OrderByReadingOrder() (ret TextLines) {
+// 	if len(l) <= 1 {
+// 		return l
+// 	}
 
-type TextLines []TextLine
+// 	switch l.Orientation() {
+// 	case PageUp:
+// 		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	case PageDown:
+// 		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 	case PageLeft:
+// 		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	case PageRight:
+// 		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+// 	default:
+// 		avgAngle := linq.From(l).Select(func(i interface{}) interface{} { return i.(TextLine).Quad.Rotation() }).Average()
+// 		switch {
+// 		case 0 < avgAngle && avgAngle <= 90:
+// 			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+// 		case 90 < avgAngle && avgAngle <= 180:
+// 			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		case -180 < avgAngle && avgAngle <= -90:
+// 			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
+// 		case -90 < avgAngle && avgAngle <= 0:
+// 			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
+// 		default:
+// 			return l
+// 		}
+// 	}
 
-func (l TextLines) Orientation() (orientation Orientation) {
-	if len(l) == 0 {
-		return OtherOrientation
-	}
+// 	return
+// }
 
-	orientation = l[0].Orientation
-	if orientation == OtherOrientation {
-		return
-	}
+// type TextLine struct {
+// 	TextWords
+// 	Quad          Quad
+// 	Orientation   Orientation
+// 	WordSeparator string
+// }
 
-	for _, word := range l[1:] {
-		if word.Orientation != orientation {
-			return OtherOrientation
-		}
-	}
-	return
-}
+// func MakeTextLine(words TextWords, sep string) TextLine {
+// 	var quads = make(Quads, len(words))
+// 	for i, l := range words {
+// 		quads[i] = l.Quad
+// 	}
 
-func (l TextLines) OrderByReadingOrder() (ret TextLines) {
-	if len(l) <= 1 {
-		return l
-	}
+// 	return TextLine{
+// 		TextWords:     words,
+// 		Orientation:   quads.Orientation(),
+// 		Quad:          quads.Union(),
+// 		WordSeparator: sep,
+// 	}
+// }
 
-	switch l.Orientation() {
-	case PageUp:
-		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case PageDown:
-		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-	case PageLeft:
-		linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
-	case PageRight:
-		linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
-	default:
-		avgAngle := linq.From(l).Select(func(i interface{}) interface{} { return i.(TextLine).Quad.Rotation() }).Average()
-		switch {
-		case 0 < avgAngle && avgAngle <= 90:
-			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
-		case 90 < avgAngle && avgAngle <= 180:
-			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-		case -180 < avgAngle && avgAngle <= -90:
-			linq.From(l).OrderBy(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ToSlice(&ret)
-		case -90 < avgAngle && avgAngle <= 0:
-			linq.From(l).OrderByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.X }).ThenByDescending(func(i interface{}) interface{} { return i.(TextLine).Quad.BottomLeft.Y }).ToSlice(&ret)
-		default:
-			return l
-		}
-	}
+// func (l TextLine) String() string {
+// 	words := make([]string, 0, len(l.TextWords))
+// 	for _, w := range l.TextWords {
+// 		if strings.TrimSpace(w.Value) == "" {
+// 			continue
+// 		}
+// 		words = append(words, w.String())
+// 	}
+// 	return strings.Join(words, l.WordSeparator)
+// }
 
-	return
-}
+// type TextBlocks []TextBlock
 
-type TextLine struct {
-	TextWords
-	Quad          Quad
-	Orientation   Orientation
-	WordSeparator string
-}
+// func (tb TextBlocks) String() string {
+// 	var builder strings.Builder
+// 	for _, block := range tb {
+// 		builder.WriteString(block.String())
+// 		builder.WriteRune('\n')
+// 	}
+// 	return builder.String()
+// }
 
-func MakeTextLine(words TextWords, sep string) TextLine {
-	var quads = make(Quads, len(words))
-	for i, l := range words {
-		quads[i] = l.Quad
-	}
+// type TextBlock struct {
+// 	TextLines
+// 	Quad          Quad
+// 	Orientation   Orientation
+// 	LineSeparator string
+// }
 
-	return TextLine{
-		TextWords:     words,
-		Orientation:   quads.Orientation(),
-		Quad:          quads.Union(),
-		WordSeparator: sep,
-	}
-}
+// func MakeTextBlock(lines TextLines, sep string) TextBlock {
+// 	var quads = make(Quads, len(lines))
+// 	for i, l := range lines {
+// 		quads[i] = l.Quad
+// 	}
 
-func (l TextLine) String() string {
-	words := make([]string, 0, len(l.TextWords))
-	for _, w := range l.TextWords {
-		if strings.TrimSpace(w.Value) == "" {
-			continue
-		}
-		words = append(words, w.String())
-	}
-	return strings.Join(words, l.WordSeparator)
-}
+// 	return TextBlock{
+// 		TextLines:     lines,
+// 		Orientation:   quads.Orientation(),
+// 		Quad:          quads.Union(),
+// 		LineSeparator: sep,
+// 	}
+// }
 
-type TextBlocks []TextBlock
-
-func (tb TextBlocks) String() string {
-	var builder strings.Builder
-	for _, block := range tb {
-		builder.WriteString(block.String())
-		builder.WriteRune('\n')
-	}
-	return builder.String()
-}
-
-type TextBlock struct {
-	TextLines
-	Quad          Quad
-	Orientation   Orientation
-	LineSeparator string
-}
-
-func MakeTextBlock(lines TextLines, sep string) TextBlock {
-	var quads = make(Quads, len(lines))
-	for i, l := range lines {
-		quads[i] = l.Quad
-	}
-
-	return TextBlock{
-		TextLines:     lines,
-		Orientation:   quads.Orientation(),
-		Quad:          quads.Union(),
-		LineSeparator: sep,
-	}
-}
-
-func (b TextBlock) String() string {
-	lines := make([]string, len(b.TextLines))
-	for i, l := range b.TextLines {
-		lines[i] = l.String()
-	}
-	return strings.Join(lines, b.LineSeparator)
-}
+// func (b TextBlock) String() string {
+// 	lines := make([]string, len(b.TextLines))
+// 	for i, l := range b.TextLines {
+// 		lines[i] = l.String()
+// 	}
+// 	return strings.Join(lines, b.LineSeparator)
+// }
