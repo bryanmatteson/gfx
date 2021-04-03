@@ -32,7 +32,7 @@ func Flatten(path *Path, flattener Flattener, scale float64) {
 	var startX, startY float64 = 0, 0
 
 	for i, j := 0, 0; i < len(path.Components); i++ {
-		cmd := path.Components[j]
+		cmd := path.Components[i]
 
 		switch cmd {
 		case MoveToComp:
