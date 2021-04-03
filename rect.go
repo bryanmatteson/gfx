@@ -122,6 +122,8 @@ type Rect struct {
 	X, Y Range
 }
 
+var UnitRect = MakeRect(0, 0, 1, 1)
+
 func MakeRectWH(x, y, w, h float64) Rect {
 	return MakeRect(x, y, x+w, y+h)
 }
