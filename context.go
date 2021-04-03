@@ -273,6 +273,14 @@ func (gc *StackGraphicContext) Scale(sx, sy float64) {
 	gc.Current.Trm = gc.Current.Trm.Scaled(sx, sy)
 }
 
+func (gc *StackGraphicContext) SetStroke(stroke *Stroke) {
+	gc.Current.Dash = stroke.Dashes
+	gc.Current.DashOffset = stroke.DashPhase
+	gc.Current.Cap = stroke.LineCap
+	gc.Current.Join = stroke.LineJoin
+	gc.Current.LineWidth = stroke.LineWidth
+}
+
 func (gc *StackGraphicContext) SetStrokeColor(c color.Color) {
 	gc.Current.StrokeColor = c
 }

@@ -1,10 +1,7 @@
 package gfx
 
 type Stroke struct {
-	StartCap LineCap
-	DashCap  LineCap
-	EndCap   LineCap
-
+	LineCap   LineCap
 	LineJoin  LineJoin
 	LineWidth float64
 
