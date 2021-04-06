@@ -9,7 +9,12 @@ import (
 	"github.com/golang/freetype/raster"
 )
 
-var DefaultFontData = FontData{Name: "Arial", Family: FontFamilySans, Style: FontStyleNormal}
+var defaultFontData = FontData{Name: "Arial", Family: FontFamilySans, Style: FontStyleNormal}
+
+var (
+	defaultFillStyle   = NewSolidPattern(color.White)
+	defaultStrokeStyle = NewSolidPattern(color.Black)
+)
 
 // Painter implements the freetype raster.Painter and has a SetColor method like the RGBAPainter
 type Painter interface {
@@ -22,7 +27,6 @@ type ImageContext struct {
 	img        *image.RGBA
 	fontCache  FontCache
 	rasterizer *raster.Rasterizer
-	painter    *raster.RGBAPainter
 	dpi        int
 	filter     ImageFilter
 }
@@ -47,7 +51,6 @@ func NewContextForImage(img draw.Image) *ImageContext {
 		StackGraphicContext: NewStackGraphicContext(),
 		img:                 rgbaImage,
 		rasterizer:          raster.NewRasterizer(width, height),
-		painter:             raster.NewRGBAPainter(rgbaImage),
 		dpi:                 72,
 		filter:              BilinearFilter,
 	}
@@ -58,13 +61,13 @@ func (gc *ImageContext) SetFontCache(cache FontCache) { gc.fontCache = cache }
 
 func (gc *ImageContext) GetDPI() int { return gc.dpi }
 
-func (gc *ImageContext) Clear() {
+func (gc *ImageContext) Clear(color color.Color) {
 	width, height := gc.img.Bounds().Dx(), gc.img.Bounds().Dy()
-	gc.ClearRect(image.Rect(0, 0, width, height))
+	gc.ClearRect(image.Rect(0, 0, width, height), color)
 }
 
-func (gc *ImageContext) ClearRect(rect image.Rectangle) {
-	imageColor := image.NewUniform(gc.Current.FillColor)
+func (gc *ImageContext) ClearRect(rect image.Rectangle, color color.Color) {
+	imageColor := image.NewUniform(color)
 	draw.Draw(gc.img, rect, imageColor, image.Point{}, draw.Src)
 }
 
@@ -135,13 +138,6 @@ func (gc *ImageContext) SetFontSize(fontSize float64) {
 	gc.recalc()
 }
 
-func (gc *ImageContext) paint(color color.Color) {
-	gc.painter.SetColor(color)
-	gc.rasterizer.Rasterize(gc.painter)
-	gc.rasterizer.Clear()
-	gc.Current.Path.Clear()
-}
-
 func (gc *ImageContext) Stroke(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
 	gc.rasterizer.UseNonZeroWinding = true
@@ -158,7 +154,44 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 		Flatten(p, liner, gc.Current.Trm.GetScale())
 	}
 
-	gc.paint(gc.Current.StrokeColor)
+	var painter raster.Painter
+	if gc.Current.Mask == nil {
+		if pattern, ok := gc.Current.StrokePattern.(*solidPattern); ok {
+			p := raster.NewRGBAPainter(gc.img)
+			p.SetColor(pattern.color)
+			painter = p
+		}
+	}
+	if painter == nil {
+		painter = newPatternPainter(gc.img, gc.Current.Mask, gc.Current.StrokePattern)
+	}
+
+	gc.rasterizer.Rasterize(painter)
+}
+
+func (gc *ImageContext) Fill(paths ...*Path) {
+	gc.rasterizer.Clear()
+	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
+
+	paths = append(paths, gc.Current.Path)
+	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.rasterizer}}
+	for _, p := range paths {
+		Flatten(p, flattener, gc.Current.Trm.GetScale())
+	}
+
+	var painter raster.Painter
+	if gc.Current.Mask == nil {
+		if pattern, ok := gc.Current.FillPattern.(*solidPattern); ok {
+			p := raster.NewRGBAPainter(gc.img)
+			p.SetColor(pattern.color)
+			painter = p
+		}
+	}
+	if painter == nil {
+		painter = newPatternPainter(gc.img, gc.Current.Mask, gc.Current.FillPattern)
+	}
+
+	gc.rasterizer.Rasterize(painter)
 }
 
 func (gc *ImageContext) Clip(paths ...*Path) {
@@ -185,18 +218,6 @@ func (gc *ImageContext) Clip(paths ...*Path) {
 	}
 }
 
-func (gc *ImageContext) Fill(paths ...*Path) {
-	paths = append(paths, gc.Current.Path)
-	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
-
-	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.rasterizer}}
-	for _, p := range paths {
-		Flatten(p, flattener, gc.Current.Trm.GetScale())
-	}
-
-	gc.paint(gc.Current.FillColor)
-}
-
 type ImageFilter int
 
 const (
@@ -210,21 +231,21 @@ type StackGraphicContext struct {
 }
 
 type ContextStack struct {
-	Trm         Matrix
-	Path        *Path
-	LineWidth   float64
-	Dash        []float64
-	DashOffset  float64
-	StrokeColor color.Color
-	FillColor   color.Color
-	FillRule    FillRule
-	Cap         LineCap
-	Join        LineJoin
-	FontSize    float64
-	FontData    FontData
-	Font        Font
-	Scale       float64
-	Mask        *image.Alpha
+	Trm           Matrix
+	Path          *Path
+	LineWidth     float64
+	Dash          []float64
+	DashOffset    float64
+	FillRule      FillRule
+	Cap           LineCap
+	Join          LineJoin
+	FontSize      float64
+	FontData      FontData
+	Font          Font
+	Scale         float64
+	FillPattern   Pattern
+	StrokePattern Pattern
+	Mask          *image.Alpha
 
 	Previous *ContextStack
 }
@@ -232,17 +253,17 @@ type ContextStack struct {
 func NewStackGraphicContext() *StackGraphicContext {
 	gc := &StackGraphicContext{
 		Current: &ContextStack{
-			Trm:         IdentityMatrix,
-			Path:        new(Path),
-			LineWidth:   1.0,
-			StrokeColor: image.Black,
-			FillColor:   image.White,
-			Cap:         RoundCap,
-			FillRule:    FillRuleEvenOdd,
-			Join:        RoundJoin,
-			FontSize:    10,
-			FontData:    DefaultFontData,
-			Scale:       1.0,
+			Trm:           IdentityMatrix,
+			Path:          new(Path),
+			LineWidth:     1.0,
+			Cap:           RoundCap,
+			FillRule:      FillRuleEvenOdd,
+			Join:          RoundJoin,
+			FontSize:      10,
+			FontData:      defaultFontData,
+			FillPattern:   defaultFillStyle,
+			StrokePattern: defaultStrokeStyle,
+			Scale:         1.0,
 		},
 	}
 	return gc
@@ -281,11 +302,11 @@ func (gc *StackGraphicContext) SetStroke(stroke *Stroke) {
 }
 
 func (gc *StackGraphicContext) SetStrokeColor(c color.Color) {
-	gc.Current.StrokeColor = c
+	gc.Current.StrokePattern = NewSolidPattern(c)
 }
 
 func (gc *StackGraphicContext) SetFillColor(c color.Color) {
-	gc.Current.FillColor = c
+	gc.Current.FillPattern = NewSolidPattern(c)
 }
 
 func (gc *StackGraphicContext) SetFillRule(f FillRule) {
@@ -391,8 +412,8 @@ func (gc *StackGraphicContext) Save() {
 	context.FontData = gc.Current.FontData
 	context.Font = gc.Current.Font
 	context.LineWidth = gc.Current.LineWidth
-	context.StrokeColor = gc.Current.StrokeColor
-	context.FillColor = gc.Current.FillColor
+	context.StrokePattern = gc.Current.StrokePattern
+	context.FillPattern = gc.Current.FillPattern
 	context.FillRule = gc.Current.FillRule
 	context.Dash = gc.Current.Dash
 	context.DashOffset = gc.Current.DashOffset
