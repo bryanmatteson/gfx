@@ -19,38 +19,36 @@ type Painter interface {
 
 type ImageContext struct {
 	*StackGraphicContext
-	img              draw.Image
-	painter          Painter
-	fontCache        FontCache
-	fillRasterizer   *raster.Rasterizer
-	strokeRasterizer *raster.Rasterizer
-	dpi              int
-	filter           ImageFilter
+	img        *image.RGBA
+	fontCache  FontCache
+	rasterizer *raster.Rasterizer
+	painter    *raster.RGBAPainter
+	dpi        int
+	filter     ImageFilter
+}
+
+func NewContext(width, height int) *ImageContext {
+	return NewContextForImage(image.NewRGBA(image.Rect(0, 0, width, height)))
 }
 
 // NewImageContext creates a new Graphic context from an image.
-func NewImageContext(img draw.Image) *ImageContext {
-	var painter Painter
+func NewContextForImage(img draw.Image) *ImageContext {
+	width, height := img.Bounds().Dx(), img.Bounds().Dy()
+	var rgbaImage *image.RGBA
+
 	switch selectImage := img.(type) {
 	case *image.RGBA:
-		painter = raster.NewRGBAPainter(selectImage)
+		rgbaImage = selectImage
 	default:
-		img = ImageToRGBA(img)
-		painter = raster.NewRGBAPainter(img.(*image.RGBA))
+		rgbaImage = ImageToRGBA(img)
 	}
-	return NewImageContextWithPainter(img, painter)
-}
 
-// NewImageContextWithPainter creates a new Graphic context from an image and a Painter
-func NewImageContextWithPainter(img draw.Image, painter Painter) *ImageContext {
-	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 	gc := &ImageContext{
 		StackGraphicContext: NewStackGraphicContext(),
-		img:                 img,
-		painter:             painter,
-		fillRasterizer:      raster.NewRasterizer(width, height),
-		strokeRasterizer:    raster.NewRasterizer(width, height),
-		dpi:                 92,
+		img:                 rgbaImage,
+		rasterizer:          raster.NewRasterizer(width, height),
+		painter:             raster.NewRGBAPainter(rgbaImage),
+		dpi:                 72,
 		filter:              BilinearFilter,
 	}
 	return gc
@@ -137,19 +135,18 @@ func (gc *ImageContext) SetFontSize(fontSize float64) {
 	gc.recalc()
 }
 
-func (gc *ImageContext) paint(rasterizer *raster.Rasterizer, color color.Color) {
+func (gc *ImageContext) paint(color color.Color) {
 	gc.painter.SetColor(color)
-	rasterizer.Rasterize(gc.painter)
-	rasterizer.Clear()
+	gc.rasterizer.Rasterize(gc.painter)
+	gc.rasterizer.Clear()
 	gc.Current.Path.Clear()
 }
 
-// Stroke strokes the paths with the color specified by SetStrokeColor
 func (gc *ImageContext) Stroke(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
-	gc.strokeRasterizer.UseNonZeroWinding = true
+	gc.rasterizer.UseNonZeroWinding = true
 
-	stroker := NewLineStroker(gc.Current.Cap, gc.Current.Join, Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.strokeRasterizer}})
+	stroker := NewLineStroker(gc.Current.Cap, gc.Current.Join, Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.rasterizer}})
 	stroker.HalfLineWidth = gc.Current.LineWidth / 2
 
 	var liner Flattener = stroker
@@ -161,45 +158,43 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 		Flatten(p, liner, gc.Current.Trm.GetScale())
 	}
 
-	gc.paint(gc.strokeRasterizer, gc.Current.StrokeColor)
+	gc.paint(gc.Current.StrokeColor)
 }
 
-func (gc *ImageContext) Fill(paths ...*Path) {
+func (gc *ImageContext) Clip(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
-	gc.fillRasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
+	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
 
-	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.fillRasterizer}}
+	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.rasterizer}}
 	for _, p := range paths {
 		Flatten(p, flattener, gc.Current.Trm.GetScale())
 	}
 
-	gc.paint(gc.fillRasterizer, gc.Current.FillColor)
+	clip := image.NewAlpha(gc.img.Bounds())
+	painter := raster.NewAlphaOverPainter(clip)
+	gc.rasterizer.Rasterize(painter)
+	gc.rasterizer.Clear()
+	gc.Current.Path.Clear()
+
+	if gc.Current.Mask == nil {
+		gc.Current.Mask = clip
+	} else {
+		mask := image.NewAlpha(gc.img.Bounds())
+		draw.DrawMask(mask, mask.Bounds(), clip, image.Point{}, gc.Current.Mask, image.Point{}, draw.Over)
+		gc.Current.Mask = mask
+	}
 }
 
-func (gc *ImageContext) FillStroke(paths ...*Path) {
+func (gc *ImageContext) Fill(paths ...*Path) {
 	paths = append(paths, gc.Current.Path)
-	gc.fillRasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
-	gc.strokeRasterizer.UseNonZeroWinding = true
+	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
 
-	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.fillRasterizer}}
-
-	stroker := NewLineStroker(gc.Current.Cap, gc.Current.Join, Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.strokeRasterizer}})
-	stroker.HalfLineWidth = gc.Current.LineWidth / 2
-
-	var liner Flattener
-	if gc.Current.Dash != nil && len(gc.Current.Dash) > 0 {
-		liner = NewDashConverter(gc.Current.Dash, gc.Current.DashOffset, stroker)
-	} else {
-		liner = stroker
-	}
-
-	demux := DemuxFlattener{Flatteners: []Flattener{flattener, liner}}
+	flattener := Transformer{Tr: gc.Current.Trm, Flattener: ftLineBuilder{Adder: gc.rasterizer}}
 	for _, p := range paths {
-		Flatten(p, demux, gc.Current.Trm.GetScale())
+		Flatten(p, flattener, gc.Current.Trm.GetScale())
 	}
 
-	gc.paint(gc.fillRasterizer, gc.Current.FillColor)
-	gc.paint(gc.strokeRasterizer, gc.Current.StrokeColor)
+	gc.paint(gc.Current.FillColor)
 }
 
 type ImageFilter int
@@ -229,23 +224,27 @@ type ContextStack struct {
 	FontData    FontData
 	Font        Font
 	Scale       float64
+	Mask        *image.Alpha
 
 	Previous *ContextStack
 }
 
 func NewStackGraphicContext() *StackGraphicContext {
-	gc := &StackGraphicContext{}
-	gc.Current = new(ContextStack)
-	gc.Current.Trm = IdentityMatrix
-	gc.Current.Path = new(Path)
-	gc.Current.LineWidth = 1.0
-	gc.Current.StrokeColor = image.Black
-	gc.Current.FillColor = image.White
-	gc.Current.Cap = RoundCap
-	gc.Current.FillRule = FillRuleEvenOdd
-	gc.Current.Join = RoundJoin
-	gc.Current.FontSize = 10
-	gc.Current.FontData = DefaultFontData
+	gc := &StackGraphicContext{
+		Current: &ContextStack{
+			Trm:         IdentityMatrix,
+			Path:        new(Path),
+			LineWidth:   1.0,
+			StrokeColor: image.Black,
+			FillColor:   image.White,
+			Cap:         RoundCap,
+			FillRule:    FillRuleEvenOdd,
+			Join:        RoundJoin,
+			FontSize:    10,
+			FontData:    DefaultFontData,
+			Scale:       1.0,
+		},
+	}
 	return gc
 }
 
@@ -402,6 +401,7 @@ func (gc *StackGraphicContext) Save() {
 	context.Path = gc.Current.Path.Copy()
 	context.Scale = gc.Current.Scale
 	context.Trm = gc.Current.Trm
+	context.Mask = gc.Current.Mask
 	context.Previous = gc.Current
 	gc.Current = context
 }
