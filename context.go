@@ -231,25 +231,21 @@ func (gc *ImageContext) Clip(paths ...*Path) {
 	}
 }
 
-func (gc *ImageContext) ClipImage(m *image.Alpha) {
-	if gc.Current.Mask == nil && m.Bounds().Size() == gc.img.Bounds().Size() {
-		gc.Current.Mask = m
-	} else {
-		var transformer draw.Transformer
-		switch gc.filter {
-		case LinearFilter:
-			transformer = draw.NearestNeighbor
-		case BilinearFilter:
-			transformer = draw.BiLinear
-		case BicubicFilter:
-			transformer = draw.CatmullRom
-		}
-		mask := image.NewAlpha(gc.img.Bounds())
-
-		trm := f64.Aff3{gc.Current.Trm.A, gc.Current.Trm.B, gc.Current.Trm.E, gc.Current.Trm.C, gc.Current.Trm.D, gc.Current.Trm.F}
-		transformer.Transform(mask, trm, m, m.Bounds(), draw.Over, nil)
-		gc.Current.Mask = mask
+func (gc *ImageContext) ClipImage(m image.Image) {
+	var transformer draw.Transformer
+	switch gc.filter {
+	case LinearFilter:
+		transformer = draw.NearestNeighbor
+	case BilinearFilter:
+		transformer = draw.BiLinear
+	case BicubicFilter:
+		transformer = draw.CatmullRom
 	}
+	mask := image.NewAlpha(gc.img.Bounds())
+
+	trm := f64.Aff3{gc.Current.Trm.A, gc.Current.Trm.B, gc.Current.Trm.E, gc.Current.Trm.C, gc.Current.Trm.D, gc.Current.Trm.F}
+	transformer.Transform(mask, trm, m, m.Bounds(), draw.Over, nil)
+	gc.Current.Mask = mask
 }
 
 type ImageFilter int
