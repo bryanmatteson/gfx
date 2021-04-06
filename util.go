@@ -6,7 +6,6 @@ import (
 
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/draw"
-	"golang.org/x/image/math/f64"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -109,18 +108,4 @@ func DrawContour(path PathBuilder, ps []truetype.Point, dx, dy float64) {
 	} else {
 		path.QuadCurveTo(q0X+dx, q0Y+dy, startX+dx, startY+dy)
 	}
-}
-
-// DrawImage draws an image into dest using an affine transformation matrix, an op and a filter
-func DrawImage(src image.Image, dest draw.Image, tr Matrix, op draw.Op, filter ImageFilter) {
-	var transformer draw.Transformer
-	switch filter {
-	case LinearFilter:
-		transformer = draw.NearestNeighbor
-	case BilinearFilter:
-		transformer = draw.BiLinear
-	case BicubicFilter:
-		transformer = draw.CatmullRom
-	}
-	transformer.Transform(dest, f64.Aff3{tr.A, tr.B, tr.E, tr.C, tr.D, tr.F}, src, src.Bounds(), op, nil)
 }
