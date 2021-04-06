@@ -17,12 +17,6 @@ var (
 	defaultStrokeStyle = NewSolidPattern(color.Black)
 )
 
-// Painter implements the freetype raster.Painter and has a SetColor method like the RGBAPainter
-type Painter interface {
-	raster.Painter
-	SetColor(color color.Color)
-}
-
 type ImageContext struct {
 	*StackGraphicContext
 	img        *image.RGBA
@@ -152,6 +146,10 @@ func (gc *ImageContext) SetFontSize(fontSize float64) {
 }
 
 func (gc *ImageContext) Stroke(paths ...*Path) {
+	if len(paths) == 0 && gc.Current.Path.IsEmpty() {
+		return
+	}
+
 	paths = append(paths, gc.Current.Path)
 	gc.rasterizer.UseNonZeroWinding = true
 
@@ -183,6 +181,10 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 }
 
 func (gc *ImageContext) Fill(paths ...*Path) {
+	if len(paths) == 0 && gc.Current.Path.IsEmpty() {
+		return
+	}
+
 	gc.rasterizer.Clear()
 	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
 
@@ -208,6 +210,10 @@ func (gc *ImageContext) Fill(paths ...*Path) {
 }
 
 func (gc *ImageContext) Clip(paths ...*Path) {
+	if len(paths) == 0 && gc.Current.Path.IsEmpty() {
+		return
+	}
+
 	paths = append(paths, gc.Current.Path)
 	gc.rasterizer.UseNonZeroWinding = gc.Current.FillRule == FillRuleWinding
 
