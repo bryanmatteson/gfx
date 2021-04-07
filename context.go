@@ -118,11 +118,16 @@ func (gc *ImageContext) DrawImage(img image.Image) {
 		transformer = draw.CatmullRom
 	}
 
+	var options *draw.Options
+	if gc.Current.Mask != nil {
+		options = &draw.Options{
+			DstMask:  gc.Current.Mask,
+			DstMaskP: image.Point{},
+		}
+	}
+
 	trm := gc.Current.Trm
-	transformer.Transform(gc.img, f64.Aff3{trm.A, trm.B, trm.E, trm.C, trm.D, trm.F}, img, img.Bounds(), draw.Over, &draw.Options{
-		DstMask:  gc.Current.Mask,
-		DstMaskP: image.Point{},
-	})
+	transformer.Transform(gc.img, f64.Aff3{trm.A, trm.B, trm.E, trm.C, trm.D, trm.F}, img, img.Bounds(), draw.Over, options)
 }
 
 // recalc recalculates scale and bounds values from the font size, screen
