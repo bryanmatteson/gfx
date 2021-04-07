@@ -150,6 +150,8 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 		return
 	}
 
+	gc.rasterizer.Clear()
+
 	paths = append(paths, gc.Current.Path)
 	gc.rasterizer.UseNonZeroWinding = true
 
@@ -178,6 +180,8 @@ func (gc *ImageContext) Stroke(paths ...*Path) {
 	}
 
 	gc.rasterizer.Rasterize(painter)
+	gc.rasterizer.Clear()
+	gc.Current.Path.Clear()
 }
 
 func (gc *ImageContext) Fill(paths ...*Path) {
@@ -207,6 +211,8 @@ func (gc *ImageContext) Fill(paths ...*Path) {
 	}
 
 	gc.rasterizer.Rasterize(painter)
+	gc.rasterizer.Clear()
+	gc.Current.Path.Clear()
 }
 
 func (gc *ImageContext) Clip(paths ...*Path) {
