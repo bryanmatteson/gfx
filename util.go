@@ -60,6 +60,20 @@ func fUnitsToFloat64(x fixed.Int26_6) float64 {
 	return float64(scaled/256) + float64(scaled%256)/256.0
 }
 
+func AdjustRectForStroke(r Rect, stroke *Stroke, trm Matrix) Rect {
+	if stroke == nil {
+		return r
+	}
+
+	expand := stroke.LineWidth
+	if expand == 0.0 {
+		expand = 1.0
+	}
+
+	expand *= trm.MaxExpansion()
+	return r.Expanded(Point{expand, expand})
+}
+
 // DrawContour draws the given closed contour at the given sub-pixel offset.
 func DrawContour(path PathBuilder, ps []truetype.Point, dx, dy float64) {
 	if len(ps) == 0 {
