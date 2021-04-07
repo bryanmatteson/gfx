@@ -122,6 +122,10 @@ type Rect struct {
 	X, Y Range
 }
 
+func ImageRect(r image.Rectangle) Rect {
+	return MakeRect(float64(r.Min.X), float64(r.Min.Y), float64(r.Max.X), float64(r.Max.Y))
+}
+
 var UnitRect = MakeRect(0, 0, 1, 1)
 
 func MakeRectWH(x, y, w, h float64) Rect {
