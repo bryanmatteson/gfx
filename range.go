@@ -2,12 +2,21 @@ package gfx
 
 import "math"
 
+const MinInfRange = int(0x80000000)
+const MaxInfRange = int(0x7fffff80)
+
 type Range struct {
 	Min, Max float64
 }
 
+var InfiniteRange = Range{float64(MinInfRange), float64(MaxInfRange)}
+
 // EmptyRange returns an empty range.
 func EmptyRange() Range { return Range{1, 0} }
+
+func (r Range) IsInfinite() bool {
+	return int(r.Min) == MinInfRange && int(r.Max) == MaxInfRange
+}
 
 // IsEmpty reports whether the interval is empty.
 func (r Range) IsEmpty() bool { return r.Min > r.Max }

@@ -127,6 +127,7 @@ func ImageRect(r image.Rectangle) Rect {
 }
 
 var UnitRect = MakeRect(0, 0, 1, 1)
+var InfiniteRect = Rect{InfiniteRange, InfiniteRange}
 
 func MakeRectWH(x, y, w, h float64) Rect {
 	return MakeRect(x, y, x+w, y+h)
@@ -146,6 +147,10 @@ func MakeRect(x0, y0, x1, y1 float64) Rect {
 
 func EmptyRect() Rect {
 	return Rect{EmptyRange(), EmptyRange()}
+}
+
+func (r Rect) IsInfiniteRect() bool {
+	return r.X.IsInfinite() && r.Y.IsInfinite()
 }
 
 func (r Rect) ImageRect() image.Rectangle {
