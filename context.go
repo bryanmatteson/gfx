@@ -119,7 +119,10 @@ func (gc *ImageContext) DrawImage(img image.Image) {
 	}
 
 	trm := gc.Current.Trm
-	transformer.Transform(gc.img, f64.Aff3{trm.A, trm.B, trm.E, trm.C, trm.D, trm.F}, img, img.Bounds(), draw.Over, nil)
+	transformer.Transform(gc.img, f64.Aff3{trm.A, trm.B, trm.E, trm.C, trm.D, trm.F}, img, img.Bounds(), draw.Over, &draw.Options{
+		SrcMask:  gc.Current.Mask,
+		SrcMaskP: image.Point{},
+	})
 }
 
 // recalc recalculates scale and bounds values from the font size, screen
