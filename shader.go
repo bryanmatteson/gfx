@@ -4,10 +4,10 @@ type ShaderKind int
 
 // Shade types
 const (
-	LinearShaderKind ShaderKind = iota
-	RadialShaderKind
-	MeshShaderKind
-	FunctionShaderKind
+	FunctionShader ShaderKind = 1 + iota
+	LinearShader
+	RadialShader
+	MeshShader
 )
 
 type Shader struct {
