@@ -237,7 +237,7 @@ func (gc *ImageContext) Clip(paths ...*Path) {
 	}
 }
 
-func (gc *ImageContext) ClipImage(m image.Image) {
+func (gc *ImageContext) DrawMask(m image.Image, mat Matrix) {
 	var transformer draw.Transformer
 	switch gc.filter {
 	case LinearFilter:
@@ -249,7 +249,7 @@ func (gc *ImageContext) ClipImage(m image.Image) {
 	}
 	mask := image.NewAlpha(gc.img.Bounds())
 
-	trm := f64.Aff3{gc.Current.Trm.A, gc.Current.Trm.B, gc.Current.Trm.E, gc.Current.Trm.C, gc.Current.Trm.D, gc.Current.Trm.F}
+	trm := f64.Aff3{mat.A, mat.B, mat.E, mat.C, mat.D, mat.F}
 	transformer.Transform(mask, trm, m, m.Bounds(), draw.Over, nil)
 	gc.Current.Mask = mask
 }
