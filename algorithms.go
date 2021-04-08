@@ -5,7 +5,7 @@ import (
 )
 
 func Partition(starts, ends []float64) (ranges []Range) {
-	events := uniqfloats(append(starts, ends...))
+	events := append(starts, ends...)
 	sort.Float64s(events)
 
 	contains := func(set []float64, e float64) bool {
