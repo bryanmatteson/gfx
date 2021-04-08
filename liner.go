@@ -334,3 +334,29 @@ func (l *LineStroker) appendVertex(vertices ...float64) {
 func vectorDistance(dx, dy float64) float64 {
 	return float64(math.Sqrt(dx*dx + dy*dy))
 }
+
+type LineWalker struct {
+	cur   Point
+	lines *[]Line
+}
+
+func NewLineWalker(lines *[]Line) PathWalker {
+	return &LineWalker{lines: lines}
+}
+
+func (f *LineWalker) MoveTo(x, y float64) { f.cur = Point{x, y} }
+
+func (f *LineWalker) LineTo(x, y float64) {
+	*f.lines = append(*f.lines, Line{Pt1: f.cur, Pt2: Point{x, y}})
+	f.cur = Point{x, y}
+}
+
+func (f *LineWalker) QuadCurveTo(cx, cy, x, y float64) {
+	f.cur = Point{x, y}
+}
+
+func (f *LineWalker) CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64) {
+	f.cur = Point{x, y}
+}
+
+func (f *LineWalker) Close() {}
