@@ -128,15 +128,3 @@ func PartitionLineColumns(lines Lines) (results Rects) {
 	}
 	return
 }
-
-func uniqfloats(input []float64) (output []float64) {
-	output = make([]float64, 0, len(input))
-	uniq := make(map[float64]struct{})
-	for _, v := range input {
-		uniq[v] = struct{}{}
-	}
-	for v := range uniq {
-		output = append(output, v)
-	}
-	return
-}

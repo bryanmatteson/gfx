@@ -31,7 +31,7 @@ func NewContext(width, height int) *ImageContext {
 }
 
 // NewImageContext creates a new Graphic context from an image.
-func NewContextForImage(img draw.Image) *ImageContext {
+func NewContextForImage(img image.Image) *ImageContext {
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 	var rgbaImage *image.RGBA
 
