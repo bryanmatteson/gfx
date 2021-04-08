@@ -347,7 +347,7 @@ func NewLineWalker(lines *[]Line) PathWalker {
 func (f *LineWalker) MoveTo(x, y float64) { f.cur = Point{x, y} }
 
 func (f *LineWalker) LineTo(x, y float64) {
-	*f.lines = append(*f.lines, Line{Pt1: f.cur, Pt2: Point{x, y}})
+	*f.lines = append(*f.lines, Line{Start: f.cur, End: Point{x, y}})
 	f.cur = Point{x, y}
 }
 

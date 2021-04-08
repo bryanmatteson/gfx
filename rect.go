@@ -6,118 +6,6 @@ import (
 	"sort"
 )
 
-type Rects []Rect
-
-func (r Rects) GroupRows() []Rects {
-	if len(r) == 0 {
-		return []Rects{}
-	}
-
-	events := make(map[float64]struct{})
-	for _, rect := range r {
-		events[rect.Y.Min], events[rect.Y.Max] = struct{}{}, struct{}{}
-	}
-
-	ys := make([]float64, 0, len(events))
-	for y := range events {
-		ys = append(ys, y)
-	}
-	sort.Float64s(ys)
-
-	rows := make([]Rects, 0)
-	row := make(Rects, 0)
-
-	count := 0
-	for _, y := range ys {
-		for _, rect := range r {
-			if !(EqualEpsilon(rect.Y.Min, y) || EqualEpsilon(rect.Y.Max, y)) {
-				continue
-			}
-
-			if EqualEpsilon(rect.Y.Min, y) {
-				count++
-			}
-			if EqualEpsilon(rect.Y.Max, y) {
-				count--
-			}
-
-			row = append(row, rect)
-		}
-
-		if count == 0 {
-			rows = append(rows, row)
-			row = nil
-		}
-	}
-
-	return rows
-}
-
-func (r Rects) Coalesce() Rects {
-	if len(r) == 0 {
-		return Rects{}
-	}
-
-	groups := make([]map[int]struct{}, 0)
-
-	for idx, rect := range r {
-		var group map[int]struct{}
-		for _, grp := range groups {
-			if _, hasIdx := grp[idx]; hasIdx {
-				group = grp
-				break
-			}
-		}
-
-		if group == nil {
-			grp := make(map[int]struct{})
-			grp[idx] = struct{}{}
-			groups = append(groups, grp)
-			group = grp
-		}
-
-		for i := idx + 1; i < len(r); i++ {
-			next := r[i]
-			if rect.Intersects(next) {
-				group[i] = struct{}{}
-			}
-		}
-	}
-
-	coalesced := make(Rects, len(groups))
-	for i, grp := range groups {
-		var minx, miny, maxx, maxy float64
-		minx, miny = math.Inf(1), math.Inf(1)
-		maxx, maxy = math.Inf(-1), math.Inf(-1)
-
-		for idx := range grp {
-			minx = math.Min(minx, r[idx].X.Min)
-			miny = math.Min(miny, r[idx].Y.Min)
-			maxx = math.Max(maxx, r[idx].X.Max)
-			maxy = math.Max(maxy, r[idx].Y.Max)
-		}
-
-		coalesced[i] = MakeRect(minx, miny, maxx, maxy)
-	}
-
-	return coalesced
-}
-
-func (r Rects) Union() (u Rect) {
-	var minx, miny, maxx, maxy float64
-	minx, miny = math.Inf(1), math.Inf(1)
-	maxx, maxy = math.Inf(-1), math.Inf(-1)
-
-	for _, rect := range r {
-		minx = math.Min(minx, rect.X.Min)
-		miny = math.Min(miny, rect.Y.Min)
-		maxx = math.Max(maxx, rect.X.Max)
-		maxy = math.Max(maxy, rect.Y.Max)
-	}
-
-	return MakeRect(minx, miny, maxx, maxy)
-}
-
 type Rect struct {
 	X, Y Range
 }
@@ -266,3 +154,115 @@ func (r Rect) Width() float64  { return r.X.Length() }
 func (r Rect) Height() float64 { return r.Y.Length() }
 func (r Rect) Quad() Quad      { return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max) }
 func (r Rect) IsEmpty() bool   { return r.X.IsEmpty() || r.Y.IsEmpty() }
+
+type Rects []Rect
+
+func (r Rects) GroupRows() []Rects {
+	if len(r) == 0 {
+		return []Rects{}
+	}
+
+	events := make(map[float64]struct{})
+	for _, rect := range r {
+		events[rect.Y.Min], events[rect.Y.Max] = struct{}{}, struct{}{}
+	}
+
+	ys := make([]float64, 0, len(events))
+	for y := range events {
+		ys = append(ys, y)
+	}
+	sort.Float64s(ys)
+
+	rows := make([]Rects, 0)
+	row := make(Rects, 0)
+
+	count := 0
+	for _, y := range ys {
+		for _, rect := range r {
+			if !(EqualEpsilon(rect.Y.Min, y) || EqualEpsilon(rect.Y.Max, y)) {
+				continue
+			}
+
+			if EqualEpsilon(rect.Y.Min, y) {
+				count++
+			}
+			if EqualEpsilon(rect.Y.Max, y) {
+				count--
+			}
+
+			row = append(row, rect)
+		}
+
+		if count == 0 {
+			rows = append(rows, row)
+			row = nil
+		}
+	}
+
+	return rows
+}
+
+func (r Rects) Coalesce() Rects {
+	if len(r) == 0 {
+		return Rects{}
+	}
+
+	groups := make([]map[int]struct{}, 0)
+
+	for idx, rect := range r {
+		var group map[int]struct{}
+		for _, grp := range groups {
+			if _, hasIdx := grp[idx]; hasIdx {
+				group = grp
+				break
+			}
+		}
+
+		if group == nil {
+			grp := make(map[int]struct{})
+			grp[idx] = struct{}{}
+			groups = append(groups, grp)
+			group = grp
+		}
+
+		for i := idx + 1; i < len(r); i++ {
+			next := r[i]
+			if rect.Intersects(next) {
+				group[i] = struct{}{}
+			}
+		}
+	}
+
+	coalesced := make(Rects, len(groups))
+	for i, grp := range groups {
+		var minx, miny, maxx, maxy float64
+		minx, miny = math.Inf(1), math.Inf(1)
+		maxx, maxy = math.Inf(-1), math.Inf(-1)
+
+		for idx := range grp {
+			minx = math.Min(minx, r[idx].X.Min)
+			miny = math.Min(miny, r[idx].Y.Min)
+			maxx = math.Max(maxx, r[idx].X.Max)
+			maxy = math.Max(maxy, r[idx].Y.Max)
+		}
+
+		coalesced[i] = MakeRect(minx, miny, maxx, maxy)
+	}
+
+	return coalesced
+}
+
+func (r Rects) Union() (u Rect) {
+	var minx, miny, maxx, maxy float64
+	minx, miny = math.Inf(1), math.Inf(1)
+	maxx, maxy = math.Inf(-1), math.Inf(-1)
+
+	for _, rect := range r {
+		minx = math.Min(minx, rect.X.Min)
+		miny = math.Min(miny, rect.Y.Min)
+		maxx = math.Max(maxx, rect.X.Max)
+		maxy = math.Max(maxy, rect.Y.Max)
+	}
+
+	return MakeRect(minx, miny, maxx, maxy)
+}

@@ -83,8 +83,8 @@ func (gc *ImageContext) DrawQuad(quad Quad) {
 }
 
 func (gc *ImageContext) DrawLine(line Line) {
-	gc.MoveToPoint(line.Pt1)
-	gc.LineToPoint(line.Pt2)
+	gc.MoveToPoint(line.Start)
+	gc.LineToPoint(line.End)
 }
 
 func (gc *ImageContext) DrawPath(path *Path) {
