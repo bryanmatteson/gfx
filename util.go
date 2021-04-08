@@ -2,6 +2,7 @@ package gfx
 
 import (
 	"image"
+	"image/color"
 	"math"
 
 	"github.com/golang/freetype/truetype"
@@ -122,4 +123,29 @@ func DrawContour(path PathBuilder, ps []truetype.Point, dx, dy float64) {
 	} else {
 		path.QuadCurveTo(q0X+dx, q0Y+dy, startX+dx, startY+dy)
 	}
+}
+
+func CropImage(img image.Image, color color.Color) Rect {
+	var minx, miny, maxx, maxy float64
+	minx, miny = math.Inf(1), math.Inf(1)
+	maxx, maxy = math.Inf(-1), math.Inf(-1)
+
+	cr, cg, cb, _ := color.RGBA()
+
+	bounds := img.Bounds()
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			r, g, b, a := img.At(x, y).RGBA()
+			if (r == cr && g == cg && b == cb) || a == 0 {
+				continue
+			}
+
+			minx = math.Min(minx, float64(x))
+			miny = math.Min(miny, float64(y))
+			maxx = math.Max(maxx, float64(x))
+			maxy = math.Max(maxy, float64(y))
+		}
+	}
+
+	return MakeRect(minx, miny, maxx, maxy)
 }
