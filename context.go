@@ -453,7 +453,7 @@ func (gc *StackGraphicContext) CubicCurveToPoints(cp1, cp2, pt Point) {
 }
 
 func (gc *StackGraphicContext) ClosePath() {
-	gc.Current.Path.ClosePath()
+	gc.Current.Path.Close()
 }
 
 func (gc *StackGraphicContext) Save() {

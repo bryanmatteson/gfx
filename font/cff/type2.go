@@ -365,7 +365,7 @@ func t2Call(ctx *t2context, subroutines []pscmdseq) {
 func t2Return(ctx *t2context) {}
 
 func t2Endchar(ctx *t2context) {
-	ctx.path.ClosePath()
+	ctx.path.Close()
 	ctx.stack.clear()
 }
 

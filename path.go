@@ -89,8 +89,8 @@ func (p *Path) CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64) {
 	p.y = y
 }
 
-// ClosePath closes the current path
-func (p *Path) ClosePath() {
+// Close closes the current path
+func (p *Path) Close() {
 	p.appendToPath(ClosePathComp)
 }
 
@@ -138,14 +138,33 @@ func (p *Path) String() string {
 	return s
 }
 
-// PathBuilder describes the interface for path drawing.
-type PathBuilder interface {
-	LastPoint() (x, y float64)
+func (p *Path) Walk(builder PathWalker) {
+	for i, j := 0, 0; i < len(p.Components); i++ {
+		cmd := p.Components[i]
+		switch cmd {
+		case MoveToComp:
+			builder.MoveTo(p.Points[j].X, p.Points[j].Y)
+		case LineToComp:
+			builder.LineTo(p.Points[j].X, p.Points[j].Y)
+		case QuadCurveToComp:
+			builder.QuadCurveTo(p.Points[j].X, p.Points[j].Y, p.Points[j+1].X, p.Points[j+1].Y)
+		case CubicCurveToComp:
+			builder.CubicCurveTo(p.Points[j].X, p.Points[j].Y, p.Points[j+1].X, p.Points[j+1].Y, p.Points[j+2].X, p.Points[j+2].Y)
+		case ClosePathComp:
+			builder.Close()
+		}
+
+		j += cmd.PointCount()
+	}
+}
+
+// PathWalker describes the interface for path drawing.
+type PathWalker interface {
 	MoveTo(x, y float64)
 	LineTo(x, y float64)
 	QuadCurveTo(cx, cy, x, y float64)
 	CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64)
-	ClosePath()
+	Close()
 }
 
 func (p *Path) ApproxBounds() Rect {
