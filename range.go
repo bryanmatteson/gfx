@@ -11,6 +11,8 @@ type Range struct {
 
 var InfiniteRange = Range{float64(MinInfRange), float64(MaxInfRange)}
 
+func MakeRange(min float64, max float64) Range { return Range{min, max} }
+
 // EmptyRange returns an empty range.
 func EmptyRange() Range { return Range{1, 0} }
 
