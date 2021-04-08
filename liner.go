@@ -337,13 +337,13 @@ func vectorDistance(dx, dy float64) float64 {
 
 type LineWalker struct {
 	lines  *[]Line
-	filter func(x0, y0, x1, y1 float64) bool
+	filter func(Line) bool
 	trm    Matrix
 
 	curx, cury float64
 }
 
-func NewLineWalker(lines *[]Line, trm Matrix, filter func(x0, y0, x1, y1 float64) bool) PathWalker {
+func NewLineWalker(lines *[]Line, trm Matrix, filter func(Line) bool) PathWalker {
 	return &LineWalker{lines: lines, filter: filter, trm: trm}
 }
 
@@ -354,11 +354,13 @@ func (f *LineWalker) LineTo(x, y float64) {
 	f.curx, f.cury = x, y
 	x, y = f.trm.TransformXY(x, y)
 
-	if f.filter != nil && !f.filter(curx, cury, x, y) {
+	line := MakeLine(curx, cury, x, y)
+
+	if f.filter != nil && !f.filter(line) {
 		return
 	}
 
-	*f.lines = append(*f.lines, MakeLine(curx, cury, x, y))
+	*f.lines = append(*f.lines, line)
 }
 
 func (f *LineWalker) QuadCurveTo(cx, cy, x, y float64) {

@@ -89,6 +89,9 @@ func PartitionLineRows(lines Lines) (results Rects) {
 	starts, ends := make([]float64, len(lines)), make([]float64, len(lines))
 
 	for i, line := range lines {
+		if line.IsHorizontal() {
+			continue
+		}
 		starts[i], ends[i] = line.Start.Y, line.End.Y
 	}
 
@@ -109,6 +112,9 @@ func PartitionLineColumns(lines Lines) (results Rects) {
 	starts, ends := make([]float64, len(lines)), make([]float64, len(lines))
 
 	for i, line := range lines {
+		if line.IsVertical() {
+			continue
+		}
 		starts[i], ends[i] = line.Start.X, line.End.X
 	}
 
