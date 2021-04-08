@@ -5,17 +5,27 @@ import (
 )
 
 func Partition(starts, ends []float64) (ranges []Range) {
-	all := append(starts, ends...)
-	uniq := make(map[float64]struct{})
+	uniqStarts := make(map[float64]struct{})
+	uniqEnds := make(map[float64]struct{})
 
-	for _, v := range all {
-		uniq[v] = struct{}{}
+	for _, v := range starts {
+		uniqStarts[v] = struct{}{}
 	}
 
-	events := make([]float64, 0, len(uniq))
-	for y := range uniq {
-		events = append(events, y)
+	for _, v := range ends {
+		uniqEnds[v] = struct{}{}
 	}
+
+	starts = make([]float64, 0, len(uniqStarts))
+	for v := range uniqStarts {
+		starts = append(starts, v)
+	}
+	ends = make([]float64, 0, len(uniqEnds))
+	for v := range uniqEnds {
+		ends = append(ends, v)
+	}
+
+	events := append(starts, ends...)
 	sort.Float64s(events)
 
 	contains := func(set []float64, e float64) bool {
