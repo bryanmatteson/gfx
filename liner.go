@@ -336,27 +336,35 @@ func vectorDistance(dx, dy float64) float64 {
 }
 
 type LineWalker struct {
-	cur   Point
-	lines *[]Line
+	lines  *[]Line
+	filter func(x0, y0, x1, y1 float64) bool
+	trm    Matrix
+
+	curx, cury float64
 }
 
-func NewLineWalker(lines *[]Line) PathWalker {
-	return &LineWalker{lines: lines}
+func NewLineWalker(lines *[]Line, trm Matrix, filter func(x0, y0, x1, y1 float64) bool) PathWalker {
+	return &LineWalker{lines: lines, filter: filter, trm: trm}
 }
 
-func (f *LineWalker) MoveTo(x, y float64) { f.cur = Point{x, y} }
+func (f *LineWalker) MoveTo(x, y float64) { f.curx, f.cury = x, y }
 
 func (f *LineWalker) LineTo(x, y float64) {
-	*f.lines = append(*f.lines, Line{Start: f.cur, End: Point{x, y}})
-	f.cur = Point{x, y}
+	curx, cury := f.trm.TransformXY(f.curx, f.cury)
+	f.curx, f.cury = x, y
+	x, y = f.trm.TransformXY(x, y)
+
+	if f.filter != nil && f.filter(curx, cury, x, y) {
+		*f.lines = append(*f.lines, MakeLine(curx, cury, x, y))
+	}
 }
 
 func (f *LineWalker) QuadCurveTo(cx, cy, x, y float64) {
-	f.cur = Point{x, y}
+	f.curx, f.cury = x, y
 }
 
 func (f *LineWalker) CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64) {
-	f.cur = Point{x, y}
+	f.curx, f.cury = x, y
 }
 
 func (f *LineWalker) Close() {}
