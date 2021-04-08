@@ -45,6 +45,16 @@ func (r Rect) ImageRect() image.Rectangle {
 	return image.Rect(int(r.X.Min), int(r.Y.Min), int(r.X.Max), int(r.Y.Max))
 }
 
+func (r Rect) Path() *Path {
+	path := &Path{}
+	path.MoveTo(r.X.Min, r.Y.Min)
+	path.LineTo(r.X.Min, r.Y.Max)
+	path.LineTo(r.X.Max, r.Y.Max)
+	path.LineTo(r.X.Max, r.Y.Min)
+	path.Close()
+	return path
+}
+
 // IsValid reports whether the rectangle is valid.
 // This requires the width to be empty iff the height is empty.
 func (r Rect) IsValid() bool {
