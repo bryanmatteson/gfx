@@ -5,6 +5,23 @@ import (
 	"math"
 )
 
+type Points []Point
+
+func (p Points) Bounds() Rect {
+	var minx, miny, maxx, maxy float64
+	minx, miny = math.Inf(1), math.Inf(1)
+	maxx, maxy = math.Inf(-1), math.Inf(-1)
+
+	for _, v := range p {
+		minx = math.Min(minx, v.X)
+		maxx = math.Max(maxx, v.X)
+		miny = math.Min(miny, v.Y)
+		maxy = math.Max(maxy, v.Y)
+	}
+
+	return MakeRect(minx, miny, maxx, maxy)
+}
+
 type Point struct {
 	X, Y float64
 }
