@@ -149,4 +149,4 @@ func CropImage(img image.Image, color color.Color) Rect {
 	return MakeRect(minx, miny, maxx, maxy)
 }
 
-func ConstrictImageRect(img image.Image)
+// func ConstrictImageRect(img image.Image)
