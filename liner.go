@@ -382,7 +382,7 @@ func (f *LineWalker) CubicCurveTo(cx1, cy1, cx2, cy2, x, y float64) {
 }
 
 func (f *LineWalker) Close() {
-	if f.curx != f.startPoint.X && f.cury != f.startPoint.Y {
+	if f.curx != f.startPoint.X || f.cury != f.startPoint.Y {
 		f.LineTo(f.startPoint.X, f.startPoint.Y)
 	}
 }
