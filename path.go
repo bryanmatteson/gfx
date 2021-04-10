@@ -116,6 +116,50 @@ func (p *Path) IsEmpty() bool {
 	return len(p.Components) == 0
 }
 
+func (p *Path) IsRect() bool {
+	moved, closed := false, false
+	lineCount := 0
+	for _, cmp := range p.Components {
+		switch cmp {
+		case LineToComp:
+			lineCount++
+		case QuadCurveToComp, CubicCurveToComp:
+			return false
+		case MoveToComp:
+			if moved {
+				return false
+			}
+			moved = true
+		case ClosePathComp:
+			if closed {
+				return false
+			}
+			closed = true
+		}
+	}
+	if lineCount < 3 || lineCount > 4 {
+		return false
+	}
+
+	lines := make([]Line, 0, 4)
+	p.Walk(NewLineWalker(&lines, IdentityMatrix, nil))
+
+	if len(lines) != 4 {
+		return false
+	}
+
+	vcount, hcount := 0, 0
+	for _, line := range lines {
+		if line.IsHorizontal() {
+			hcount++
+		} else if line.IsVertical() {
+			vcount++
+		}
+	}
+
+	return vcount == 2 && hcount == 2
+}
+
 // String returns a debug text view of the path
 func (p *Path) String() string {
 	var s string
