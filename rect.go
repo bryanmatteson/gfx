@@ -165,6 +165,26 @@ func (r Rect) Height() float64 { return r.Y.Length() }
 func (r Rect) Quad() Quad      { return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max) }
 func (r Rect) IsEmpty() bool   { return r.X.IsEmpty() || r.Y.IsEmpty() }
 
+func (r Rect) Vertices() [4]Point {
+	return [4]Point{
+		MakePoint(r.X.Min, r.Y.Min),
+		MakePoint(r.X.Min, r.Y.Max),
+		MakePoint(r.X.Max, r.Y.Max),
+		MakePoint(r.X.Max, r.Y.Min),
+	}
+}
+
+func (r Rect) Edges() [4]Line {
+	verts := r.Vertices()
+
+	return [4]Line{
+		MakeLine(verts[0].X, verts[0].Y, verts[1].X, verts[1].Y),
+		MakeLine(verts[1].X, verts[1].Y, verts[2].X, verts[2].Y),
+		MakeLine(verts[2].X, verts[2].Y, verts[3].X, verts[3].Y),
+		MakeLine(verts[3].X, verts[3].Y, verts[0].X, verts[0].Y),
+	}
+}
+
 func (r Rect) MinDistanceTo(other Rect) float64 {
 	if r.Intersects(other) {
 		return 0

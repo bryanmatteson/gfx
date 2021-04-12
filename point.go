@@ -28,6 +28,13 @@ type Point struct {
 
 func MakePoint(x, y float64) Point { return Point{X: x, Y: y} }
 
+func (p Point) DistanceTo(q Point) float64 { return math.Hypot(p.X-q.X, p.Y-q.Y) }
+
+func (p Point) String() string { return fmt.Sprintf("%f, %f", p.X, p.Y) }
+
+// PerpDot returns the perp dot product between OP and OQ, ie. zero if aligned and |OP|*|OQ| if perpendicular.
+func (p Point) PerpDot(q Point) float64 { return p.X*q.Y - p.Y*q.X }
+
 // Add returns the sum of p and op.
 func (p Point) Add(op Point) Point { return Point{p.X + op.X, p.Y + op.Y} }
 
@@ -49,6 +56,8 @@ func (p Point) Cross(op Point) float64 { return p.X*op.Y - p.Y*op.X }
 // Norm returns the vector's norm.
 func (p Point) Norm() float64 { return math.Hypot(p.X, p.Y) }
 
+func (p Point) Eq(v Point) bool { return EqualEpsilon(p.X, v.X) && EqualEpsilon(p.Y, v.Y) }
+
 // Normalize returns a unit point in the same direction as p.
 func (p Point) Normalize() Point {
 	if p.X == 0 && p.Y == 0 {
@@ -57,9 +66,4 @@ func (p Point) Normalize() Point {
 	return p.Mul(1 / p.Norm())
 }
 
-func (p Point) DistanceTo(q Point) float64 { return math.Hypot(p.X-q.X, p.Y-q.Y) }
-
-// PerpDot returns the perp dot product between OP and OQ, ie. zero if aligned and |OP|*|OQ| if perpendicular.
-func (p Point) PerpDot(q Point) float64 { return p.X*q.Y - p.Y*q.X }
-
-func (p Point) String() string { return fmt.Sprintf("%f, %f", p.X, p.Y) }
+func (p Point) VectorLength() float64 { return math.Hypot(p.X, p.Y) }
