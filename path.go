@@ -141,7 +141,7 @@ func (p *Path) IsRect() bool {
 		return false
 	}
 
-	lines := make([]Line, 0, 4)
+	lines := make(Lines, 0, 4)
 	p.Walk(NewLineWalker(&lines, IdentityMatrix, nil))
 
 	if len(lines) != 4 {

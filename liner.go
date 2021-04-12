@@ -336,7 +336,7 @@ func vectorDistance(dx, dy float64) float64 {
 }
 
 type LineWalker struct {
-	lines      *[]Line
+	lines      *Lines
 	filter     func(Line) bool
 	trm        Matrix
 	startPoint *Point
@@ -344,7 +344,7 @@ type LineWalker struct {
 	curx, cury float64
 }
 
-func NewLineWalker(lines *[]Line, trm Matrix, filter func(Line) bool) PathWalker {
+func NewLineWalker(lines *Lines, trm Matrix, filter func(Line) bool) PathWalker {
 	return &LineWalker{lines: lines, filter: filter, trm: trm}
 }
 
