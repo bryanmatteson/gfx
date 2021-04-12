@@ -254,6 +254,69 @@ func (r Rects) GroupRows() []Rects {
 	return rows
 }
 
+func (r Rects) Cluster(minRects int, maxDistance float64) (results []Rects) {
+	clusters := make([][]int, 0)
+	status := make(map[int]int, len(r))
+
+	regionQuery := func(id int) (neighbors []int) {
+		obj := r[id]
+		for i := 0; i < len(r); i++ {
+			if id == i {
+				continue
+			}
+			if obj.MinDistanceTo(r[i]) < maxDistance {
+				neighbors = append(neighbors, i)
+			}
+		}
+		return
+	}
+
+	var expandCluster func(id int, cluster int, neighbors []int)
+	expandCluster = func(id int, cluster int, neighbors []int) {
+		clusters[cluster-1] = append(clusters[cluster-1], id)
+		status[id] = cluster
+
+		for i := 0; i < len(neighbors); i++ {
+			nid := neighbors[i]
+			if _, ok := status[nid]; !ok {
+				status[nid] = 0
+				curneighbors := regionQuery(nid)
+				if len(curneighbors) >= minRects {
+					expandCluster(nid, cluster, curneighbors)
+				}
+			}
+
+			if status[nid] < 1 {
+				status[nid] = cluster
+				clusters[cluster-1] = append(clusters[cluster-1], nid)
+			}
+		}
+	}
+
+	for i := 0; i < len(r); i++ {
+		if _, ok := status[i]; ok {
+			continue
+		}
+
+		status[i] = 0
+		neighbors := regionQuery(i)
+		if len(neighbors) >= minRects {
+			clusters = append(clusters, make([]int, 0))
+			clusterid := len(clusters)
+			expandCluster(i, clusterid, neighbors)
+		}
+	}
+
+	results = make([]Rects, len(clusters))
+	for i, grp := range clusters {
+		for _, idx := range grp {
+			results[i] = append(results[i], r[idx])
+		}
+	}
+
+	return
+}
+
 func (r Rects) Coalesce() Rects {
 	if len(r) == 0 {
 		return Rects{}
