@@ -390,6 +390,14 @@ func (r Rects) SortAscendingY() {
 	r.Sort(func(lhs, rhs *Rect) bool { return lhs.Y.Min < rhs.Y.Min })
 }
 
+func (r Rects) SortDescendingX() {
+	r.Sort(func(lhs, rhs *Rect) bool { return lhs.X.Min > rhs.X.Min })
+}
+
+func (r Rects) SortDescendingY() {
+	r.Sort(func(lhs, rhs *Rect) bool { return lhs.Y.Min > rhs.Y.Min })
+}
+
 func (r Rects) Sort(less func(lhs, rhs *Rect) bool) { sort.Sort(&sortRects{r, less}) }
 
 type sortRects struct {
