@@ -381,3 +381,22 @@ func (r Rects) Union() (u Rect) {
 
 	return MakeRect(minx, miny, maxx, maxy)
 }
+
+func (r Rects) SortAscendingX() {
+	r.Sort(func(lhs, rhs *Rect) bool { return lhs.X.Min < rhs.X.Min })
+}
+
+func (r Rects) SortAscendingY() {
+	r.Sort(func(lhs, rhs *Rect) bool { return lhs.Y.Min < rhs.Y.Min })
+}
+
+func (r Rects) Sort(less func(lhs, rhs *Rect) bool) { sort.Sort(&sortRects{r, less}) }
+
+type sortRects struct {
+	rects Rects
+	less  func(lhs, rhs *Rect) bool
+}
+
+func (s *sortRects) Len() int           { return len(s.rects) }
+func (s *sortRects) Less(i, j int) bool { return s.less(&s.rects[i], &s.rects[j]) }
+func (s *sortRects) Swap(i, j int)      { s.rects[i], s.rects[j] = s.rects[j], s.rects[i] }
