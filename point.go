@@ -57,6 +57,8 @@ func (p Point) Normalize() Point {
 	return p.Mul(1 / p.Norm())
 }
 
+func (p Point) DistanceTo(q Point) float64 { return math.Hypot(p.X-q.X, p.Y-q.Y) }
+
 // PerpDot returns the perp dot product between OP and OQ, ie. zero if aligned and |OP|*|OQ| if perpendicular.
 func (p Point) PerpDot(q Point) float64 { return p.X*q.Y - p.Y*q.X }
 

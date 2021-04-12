@@ -165,6 +165,48 @@ func (r Rect) Height() float64 { return r.Y.Length() }
 func (r Rect) Quad() Quad      { return MakeQuad(r.X.Min, r.Y.Min, r.X.Max, r.Y.Max) }
 func (r Rect) IsEmpty() bool   { return r.X.IsEmpty() || r.Y.IsEmpty() }
 
+func (r Rect) MinDistanceTo(other Rect) float64 {
+	if r.Intersects(other) {
+		return 0
+	}
+
+	if r.X.Intersects(other.X) {
+		if r.Y.Min < other.Y.Min {
+			return other.Y.Min - r.Y.Max
+		}
+		return r.Y.Min - other.Y.Max
+	}
+
+	if r.Y.Intersects(other.Y) {
+		if r.X.Min < other.X.Min {
+			return other.X.Min - r.X.Max
+		}
+		return r.X.Min - other.X.Max
+	}
+
+	// bottom-left
+	if other.X.Min < r.X.Min && other.Y.Min < r.Y.Min {
+		return math.Hypot(r.X.Min-other.X.Max, r.Y.Min-other.Y.Max)
+	}
+
+	// bottom-right
+	if other.X.Min > r.X.Min && other.Y.Min < r.Y.Min {
+		return math.Hypot(other.X.Min-r.X.Max, r.Y.Min-other.Y.Max)
+	}
+
+	// top-left
+	if other.X.Min < r.X.Min && other.Y.Min > r.Y.Min {
+		return math.Hypot(r.X.Min-other.X.Max, other.Y.Min-r.Y.Max)
+	}
+
+	// top-right
+	if other.X.Min > r.X.Min && other.Y.Min > r.Y.Min {
+		return math.Hypot(other.X.Min-r.X.Max, other.Y.Min-r.Y.Max)
+	}
+
+	panic("unreachable")
+}
+
 type Rects []Rect
 
 func (r Rects) GroupRows() []Rects {
