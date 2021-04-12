@@ -165,7 +165,7 @@ func (l Line) Intersection(k Line) (Point, bool) {
 
 type Lines []Line
 
-func (l Lines) GroupIntersecting() (results []Lines) {
+func (l Lines) GroupIntersecting(minIntersections int) (results []Lines) {
 	clusters := make([][]int, 0)
 	status := make(map[int]int, len(l))
 
@@ -192,7 +192,9 @@ func (l Lines) GroupIntersecting() (results []Lines) {
 			if _, ok := status[nid]; !ok {
 				status[nid] = 0
 				curneighbors := regionQuery(nid)
-				expandCluster(nid, cluster, curneighbors)
+				if len(curneighbors) >= minIntersections {
+					expandCluster(nid, cluster, curneighbors)
+				}
 			}
 
 			if status[nid] < 1 {
@@ -209,9 +211,11 @@ func (l Lines) GroupIntersecting() (results []Lines) {
 
 		status[i] = 0
 		neighbors := regionQuery(i)
-		clusters = append(clusters, make([]int, 0))
-		clusterid := len(clusters)
-		expandCluster(i, clusterid, neighbors)
+		if len(neighbors) >= minIntersections {
+			clusters = append(clusters, make([]int, 0))
+			clusterid := len(clusters)
+			expandCluster(i, clusterid, neighbors)
+		}
 	}
 
 	results = make([]Lines, len(clusters))
