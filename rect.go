@@ -275,6 +275,10 @@ func (r Rects) GroupRows() []Rects {
 }
 
 func (r Rects) Cluster(minRects int, maxDistance float64) (results []Rects) {
+	if len(r) == 0 {
+		return
+	}
+
 	clusters := make([][]int, 0)
 	status := make(map[int]int, len(r))
 
@@ -388,6 +392,10 @@ func (r Rects) Coalesce() Rects {
 }
 
 func (r Rects) Union() (u Rect) {
+	if len(r) == 0 {
+		return EmptyRect()
+	}
+
 	var minx, miny, maxx, maxy float64
 	minx, miny = math.Inf(1), math.Inf(1)
 	maxx, maxy = math.Inf(-1), math.Inf(-1)

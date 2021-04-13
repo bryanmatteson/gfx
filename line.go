@@ -166,6 +166,10 @@ func (l Line) Intersection(k Line) (Point, bool) {
 type Lines []Line
 
 func (l Lines) GroupIntersecting(minIntersections int) (results []Lines) {
+	if len(l) == 0 {
+		return
+	}
+
 	clusters := make([][]int, 0)
 	status := make(map[int]int, len(l))
 
@@ -229,6 +233,10 @@ func (l Lines) GroupIntersecting(minIntersections int) (results []Lines) {
 }
 
 func (l Lines) Bounds() Rect {
+	if len(l) == 0 {
+		return EmptyRect()
+	}
+
 	var minx, miny, maxx, maxy float64
 	minx, miny = math.Inf(1), math.Inf(1)
 	maxx, maxy = math.Inf(-1), math.Inf(-1)
@@ -247,6 +255,10 @@ func (l Lines) Bounds() Rect {
 }
 
 func (l Lines) NormalizeDirection() {
+	if len(l) == 0 {
+		return
+	}
+
 	for i := 0; i < len(l); i++ {
 		line := l[i]
 		switch {
@@ -266,6 +278,10 @@ func (l Lines) NormalizeDirection() {
 }
 
 func (l *Lines) Smooth(maxLineGap float64, tolerance float64) {
+	if len(*l) == 0 {
+		return
+	}
+
 	horizontalLines := map[float64]Lines{}
 	verticalLines := map[float64]Lines{}
 
