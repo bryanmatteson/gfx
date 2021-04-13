@@ -75,7 +75,7 @@ func PartitionRectColumns(rects Rects) (results Rects) {
 	return
 }
 
-func PartitionLineRows(lines Lines) (results Rects) {
+func PartitionLineRows(lines Lines) (results []Lines) {
 	starts, ends := make([]float64, len(lines)), make([]float64, len(lines))
 
 	for i, line := range lines {
@@ -91,18 +91,18 @@ func PartitionLineRows(lines Lines) (results Rects) {
 
 	ranges := Partition(starts, ends)
 	for _, r := range ranges {
-		grouped := make(Rects, 0)
+		grouped := make(Lines, 0)
 		for _, line := range lines {
 			if r.Contains(line.Start.Y) || r.Contains(line.End.Y) {
-				grouped = append(grouped, MakeRect(line.Start.X, line.Start.Y, line.End.X, line.End.Y))
+				grouped = append(grouped, line)
 			}
 		}
-		results = append(results, grouped.Union())
+		results = append(results, grouped)
 	}
 	return
 }
 
-func PartitionLineColumns(lines Lines) (results Rects) {
+func PartitionLineColumns(lines Lines) (results []Lines) {
 	starts, ends := make([]float64, len(lines)), make([]float64, len(lines))
 
 	for i, line := range lines {
@@ -118,13 +118,13 @@ func PartitionLineColumns(lines Lines) (results Rects) {
 
 	ranges := Partition(starts, ends)
 	for _, r := range ranges {
-		grouped := make(Rects, 0)
+		grouped := make(Lines, 0)
 		for _, line := range lines {
 			if r.Contains(line.Start.Y) || r.Contains(line.End.Y) {
-				grouped = append(grouped, MakeRect(line.Start.X, line.Start.Y, line.End.X, line.End.Y))
+				grouped = append(grouped, line)
 			}
 		}
-		results = append(results, grouped.Union())
+		results = append(results, grouped)
 	}
 	return
 }
