@@ -1,6 +1,6 @@
 package afm
 
-import "go.matteson.dev/gfx"
+import "gfx"
 
 type WritingDirections byte
 

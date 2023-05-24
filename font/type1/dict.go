@@ -1,6 +1,6 @@
 package type1
 
-import "go.matteson.dev/gfx/font/adobe"
+import "gfx/font/adobe"
 
 type PrivateDictionary struct {
 	adobe.PrivateDictionary

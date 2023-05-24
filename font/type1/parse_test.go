@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"go.matteson.dev/gfx/font/type1"
+	"gfx/font/type1"
 )
 
 func TestParse(t *testing.T) {

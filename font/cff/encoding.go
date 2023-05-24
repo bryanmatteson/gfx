@@ -3,7 +3,7 @@ package cff
 import (
 	"fmt"
 
-	"go.matteson.dev/gfx/font/encoding"
+	"gfx/font/encoding"
 )
 
 type supplement struct {

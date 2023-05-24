@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"go.matteson.dev/gfx"
-	"go.matteson.dev/gfx/font/cff/charsets"
+	"gfx/font/cff/charsets"
+
+	"gfx"
 )
 
 type Type2Glyph struct {

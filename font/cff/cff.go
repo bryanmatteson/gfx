@@ -1,9 +1,10 @@
 package cff
 
 import (
-	"go.matteson.dev/gfx/font/cff/charsets"
-	"go.matteson.dev/gfx/font/encoding"
-	"go.matteson.dev/gfx"
+	"gfx/font/cff/charsets"
+	"gfx/font/encoding"
+
+	"gfx"
 )
 
 type Header struct {

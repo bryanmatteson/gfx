@@ -1,4 +1,4 @@
-module go.matteson.dev/gfx
+module gfx
 
 go 1.15
 

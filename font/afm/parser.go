@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.matteson.dev/gfx"
+	"gfx"
 )
 
 const (

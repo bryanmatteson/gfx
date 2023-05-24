@@ -3,8 +3,9 @@ package cff
 import (
 	"fmt"
 
-	"go.matteson.dev/gfx"
-	"go.matteson.dev/gfx/font/adobe"
+	"gfx/font/adobe"
+
+	"gfx"
 )
 
 const (

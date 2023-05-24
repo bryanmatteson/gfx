@@ -3,8 +3,8 @@ package cff
 import (
 	"fmt"
 
-	"go.matteson.dev/gfx/font/cff/charsets"
-	"go.matteson.dev/gfx/font/encoding"
+	"gfx/font/cff/charsets"
+	"gfx/font/encoding"
 )
 
 type table [][]byte
