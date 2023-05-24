@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"gfx/font/type1"
+	"github.com/bryanmatteson/gfx/font/type1"
 )
 
 func TestParse(t *testing.T) {

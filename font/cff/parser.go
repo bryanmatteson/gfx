@@ -3,8 +3,8 @@ package cff
 import (
 	"fmt"
 
-	"gfx/font/cff/charsets"
-	"gfx/font/encoding"
+	"github.com/bryanmatteson/gfx/font/cff/charsets"
+	"github.com/bryanmatteson/gfx/font/encoding"
 )
 
 type table [][]byte

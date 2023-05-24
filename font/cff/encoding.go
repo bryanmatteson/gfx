@@ -3,7 +3,7 @@ package cff
 import (
 	"fmt"
 
-	"gfx/font/encoding"
+	"github.com/bryanmatteson/gfx/font/encoding"
 )
 
 type supplement struct {

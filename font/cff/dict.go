@@ -3,9 +3,9 @@ package cff
 import (
 	"fmt"
 
-	"gfx/font/adobe"
+	"github.com/bryanmatteson/gfx/font/adobe"
 
-	"gfx"
+	"github.com/bryanmatteson/gfx"
 )
 
 const (

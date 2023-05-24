@@ -1,10 +1,10 @@
 package cff
 
 import (
-	"gfx/font/cff/charsets"
-	"gfx/font/encoding"
+	"github.com/bryanmatteson/gfx/font/cff/charsets"
+	"github.com/bryanmatteson/gfx/font/encoding"
 
-	"gfx"
+	"github.com/bryanmatteson/gfx"
 )
 
 type Header struct {

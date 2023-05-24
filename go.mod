@@ -1,4 +1,4 @@
-module gfx
+module github.com/bryanmatteson/gfx
 
 go 1.20
 

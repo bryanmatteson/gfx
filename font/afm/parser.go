@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gfx"
+	"github.com/bryanmatteson/gfx"
 )
 
 const (

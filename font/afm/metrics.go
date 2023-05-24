@@ -1,6 +1,6 @@
 package afm
 
-import "gfx"
+import "github.com/bryanmatteson/gfx"
 
 type WritingDirections byte
 

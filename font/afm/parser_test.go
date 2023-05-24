@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"gfx/font/afm"
+	"github.com/bryanmatteson/gfx/font/afm"
 )
 
 func TestParser(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"gfx/font/cff/charsets"
+	"github.com/bryanmatteson/gfx/font/cff/charsets"
 
-	"gfx"
+	"github.com/bryanmatteson/gfx"
 )
 
 type Type2Glyph struct {

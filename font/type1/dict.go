@@ -1,6 +1,6 @@
 package type1
 
-import "gfx/font/adobe"
+import "github.com/bryanmatteson/gfx/font/adobe"
 
 type PrivateDictionary struct {
 	adobe.PrivateDictionary
