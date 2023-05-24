@@ -151,5 +151,3 @@ func CropImage(img image.Image, color color.Color) Rect {
 
 func BoundLines(l []Line) Rect   { return Lines(l).Bounds() }
 func BoundPoints(p []Point) Rect { return Points(p).Bounds() }
-
-// func ConstrictImageRect(img image.Image)
